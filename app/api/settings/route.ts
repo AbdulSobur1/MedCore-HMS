@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { getSettings, updateSettings } from '@/lib/data'
 import { writeAuditLog } from '@/lib/audit'
 import { DEFAULT_SETTINGS } from '@/lib/format'
 
@@ -11,8 +11,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const settings = await readDataFile<Record<string, any>>('settings.json')
-    return NextResponse.json({ settings: { ...DEFAULT_SETTINGS, ...settings } })
+    const settings = await getSettings()
+    return NextResponse.json({ settings: { ...DEFAULT_SETTINGS, ...(settings || {}) } })
   } catch (error) {
     console.error('Settings error:', error)
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 })
@@ -27,9 +27,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const existing = await readDataFile<Record<string, any>>('settings.json')
-    const updated = { ...existing, ...body }
-    await writeDataFile('settings.json', updated)
+    const updated = await updateSettings(body)
 
     await writeAuditLog({
       userId: session.userId,

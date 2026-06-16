@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { hashPassword, generatePatientId } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { getPatientByEmail, createPatient } from '@/lib/data'
 import { z } from 'zod'
 
 const registerSchema = z.object({
@@ -19,14 +19,9 @@ export async function POST(request: Request) {
     const body = await request.json()
     const validated = registerSchema.parse(body)
 
-    // Read existing patients
-    const patients = await readDataFile<Record<string, any>>('patients.json')
-
-    // Check for duplicate email
-    const emailExists = Object.values(patients).some(
-      (p: any) => p.email === validated.email
-    )
-    if (emailExists) {
+    // Check for duplicate email via data layer (DB or JSON fallback)
+    const existingPatient = await getPatientByEmail(validated.email)
+    if (existingPatient) {
       return NextResponse.json(
         { error: 'Email already registered' },
         { status: 409 }
@@ -40,8 +35,7 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     }
 
-    patients[patientId] = patient
-    await writeDataFile('patients.json', patients)
+    await createPatient(patient)
 
     return NextResponse.json({ patientId, success: true }, { status: 201 })
   } catch (error) {

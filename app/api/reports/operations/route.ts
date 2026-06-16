@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile } from '@/lib/data'
+import { getAppointments } from '@/lib/data'
 
 export async function GET() {
   try {
@@ -9,8 +9,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const appointments = await readDataFile<any[]>('appointments.json')
-    const completedCount = appointments.filter((a) => a.status === 'Completed').length
+    const appointments = await getAppointments()
+    const completedCount = appointments.filter((a: any) => a.status === 'Completed').length
     const totalCount = appointments.length
 
     const operationsData = ['Week 1', 'Week 2', 'Week 3', 'Week 4'].map((name, i) => ({

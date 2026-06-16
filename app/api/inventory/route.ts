@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile } from '@/lib/data'
+import { getInventory } from '@/lib/data'
 
 export async function GET() {
   try {
@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const inventory = await readDataFile<any[]>('inventory.json')
+    const inventory = await getInventory()
     return NextResponse.json({ inventory })
   } catch (error) {
     console.error('Inventory list error:', error)

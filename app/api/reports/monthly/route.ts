@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile } from '@/lib/data'
+import { getAllPatients, getAppointments, getInvoices } from '@/lib/data'
 
 export async function GET(request: Request) {
   try {
@@ -13,12 +13,12 @@ export async function GET(request: Request) {
     const range = searchParams.get('range') || 'month'
 
     // Aggregate data based on date range
-    const appointments = await readDataFile<any[]>('appointments.json')
-    const invoices = await readDataFile<any[]>('invoices.json')
-    const patients = await readDataFile<Record<string, any>>('patients.json')
+    const appointments = await getAppointments()
+    const invoices = await getInvoices()
+    const patients = await getAllPatients()
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const patientCount = Object.keys(patients).length
+    const patientCount = patients.length
 
     // Generate mock monthly trend based on real data count
     const monthlyData = months.slice(0, 6).map((month, i) => ({

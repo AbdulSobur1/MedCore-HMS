@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createSessionToken } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { getPatientByEmail, getOTP, deleteOTP } from '@/lib/data'
 import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
@@ -22,9 +22,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Read OTPs
-    const otps = await readDataFile<Record<string, any>>('otps.json')
-    const storedOtp = otps[email]
+    // Get OTP via data layer (DB or JSON fallback)
+    const storedOtp = await getOTP(email)
 
     if (!storedOtp) {
       return NextResponse.json(
@@ -34,9 +33,8 @@ export async function POST(request: Request) {
     }
 
     // Check if OTP has expired
-    if (Date.now() > storedOtp.expiresAt) {
-      delete otps[email]
-      await writeDataFile('otps.json', otps)
+    if (Date.now() > Number(storedOtp.expiresAt)) {
+      await deleteOTP(email)
       return NextResponse.json(
         { error: 'OTP has expired. Please request a new one.' },
         { status: 400 }
@@ -52,12 +50,10 @@ export async function POST(request: Request) {
     }
 
     // Delete OTP entry
-    delete otps[email]
-    await writeDataFile('otps.json', otps)
+    await deleteOTP(email)
 
-    // Look up patient data
-    const patients = await readDataFile<Record<string, any>>('patients.json')
-    const patient = Object.values(patients).find((p: any) => p.email === email)
+    // Look up patient via data layer (DB or JSON fallback)
+    const patient = await getPatientByEmail(email)
 
     if (!patient) {
       return NextResponse.json(

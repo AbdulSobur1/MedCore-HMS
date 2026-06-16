@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { generateSecureOTP } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { getPatientByEmail, getStaffByEmail, setOTP } from '@/lib/data'
 import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
@@ -22,19 +22,13 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check patients
-    const patients = await readDataFile<Record<string, any>>('patients.json')
-    const patient = Object.values(patients).find((p: any) => p.email === email)
+    // Check patients via data layer (DB or JSON fallback)
+    const patient = await getPatientByEmail(email)
 
     if (patient) {
       // Generate OTP and store with 5-minute expiry
       const otp = generateSecureOTP()
-      const otps = await readDataFile<Record<string, any>>('otps.json')
-      otps[email] = {
-        code: otp,
-        expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
-      }
-      await writeDataFile('otps.json', otps)
+      await setOTP(email, otp, String(Date.now() + 5 * 60 * 1000))
 
       // Log OTP to server console only
       console.log(`[OTP for ${email}]: ${otp}`)
@@ -42,9 +36,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ userType: 'patient', step: 'otp' })
     }
 
-    // Check staff
-    const staffProfiles = await readDataFile<Record<string, any>>('staff.json')
-    const staff = Object.values(staffProfiles).find((s: any) => s.email === email)
+    // Check staff via data layer (DB or JSON fallback)
+    const staff = await getStaffByEmail(email)
 
     if (staff) {
       return NextResponse.json({ userType: 'staff', step: 'password' })

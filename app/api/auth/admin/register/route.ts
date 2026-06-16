@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { hashPassword, generateStaffId } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { getStaffByEmail, createStaff } from '@/lib/data'
 
 export async function POST(request: Request) {
   try {
@@ -36,12 +36,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if email already exists
-    const staffProfiles = await readDataFile<Record<string, any>>('staff.json')
-    const emailExists = Object.values(staffProfiles).some(
-      (s: any) => s.email === email
-    )
-    if (emailExists) {
+    // Check if email already exists via data layer (DB or JSON fallback)
+    const existingStaff = await getStaffByEmail(email)
+    if (existingStaff) {
       return NextResponse.json(
         { error: 'Email already registered' },
         { status: 409 }
@@ -65,8 +62,7 @@ export async function POST(request: Request) {
       isActive: true,
     }
 
-    staffProfiles[staffId] = newAdmin
-    await writeDataFile('staff.json', staffProfiles)
+    await createStaff(newAdmin)
 
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {

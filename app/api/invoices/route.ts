@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { getInvoices, createInvoice } from '@/lib/data'
 import { writeAuditLog } from '@/lib/audit'
 
 export async function GET() {
@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const invoices = await readDataFile<any[]>('invoices.json')
+    const invoices = await getInvoices()
     return NextResponse.json({ invoices })
   } catch (error) {
     console.error('Invoices list error:', error)
@@ -26,7 +26,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const invoices = await readDataFile<any[]>('invoices.json')
 
     const invoice = {
       id: `INV-${Date.now()}`,
@@ -36,8 +35,7 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     }
 
-    invoices.push(invoice)
-    await writeDataFile('invoices.json', invoices)
+    await createInvoice(invoice)
 
     await writeAuditLog({
       userId: session.userId,

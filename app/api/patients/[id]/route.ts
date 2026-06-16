@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile } from '@/lib/data'
+import { getPatientById } from '@/lib/data'
 
 export async function GET(
   _request: Request,
@@ -13,8 +13,7 @@ export async function GET(
     }
 
     const { id } = await params
-    const patients = await readDataFile<Record<string, any>>('patients.json')
-    const patient = patients[id]
+    const patient = await getPatientById(id)
 
     if (!patient) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })

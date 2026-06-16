@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { getAllPatients, createPatient } from '@/lib/data'
 import { writeAuditLog } from '@/lib/audit'
 
 export async function GET() {
@@ -10,8 +10,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const patients = await readDataFile<Record<string, any>>('patients.json')
-    const patientList = Object.entries(patients).map(([id, p]) => ({ id, ...p }))
+    const patients = await getAllPatients()
+    // Add 'id' field matching patientId for backwards compatibility
+    const patientList = patients.map((p: any) => ({ ...p, id: p.patientId }))
 
     return NextResponse.json({ patients: patientList })
   } catch (error) {
@@ -28,7 +29,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const patients = await readDataFile<Record<string, any>>('patients.json')
 
     const patientId = `PAT-${Date.now()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`
     const patient = {
@@ -37,8 +37,7 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     }
 
-    patients[patientId] = patient
-    await writeDataFile('patients.json', patients)
+    await createPatient(patient)
 
     await writeAuditLog({
       userId: session.userId,

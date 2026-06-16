@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { verifyPassword, createSessionToken } from '@/lib/auth'
-import { readDataFile } from '@/lib/data'
+import { getStaffByEmail } from '@/lib/data'
 
 export async function POST(request: Request) {
   try {
@@ -13,9 +13,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Look up staff
-    const staffProfiles = await readDataFile<Record<string, any>>('staff.json')
-    const staff = Object.values(staffProfiles).find((s: any) => s.email === email)
+    // Look up staff via data layer (DB or JSON fallback)
+    const staff = await getStaffByEmail(email)
 
     if (!staff) {
       return NextResponse.json(

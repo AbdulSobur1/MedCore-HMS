@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { updateInventoryItem } from '@/lib/data'
 
 export async function PUT(
   request: Request,
@@ -15,20 +15,14 @@ export async function PUT(
     const { name } = await params
     const decodedName = decodeURIComponent(name)
     const body = await request.json()
-    const inventory = await readDataFile<any[]>('inventory.json')
 
-    const index = inventory.findIndex(
-      (item: any) => item.name.toLowerCase() === decodedName.toLowerCase()
-    )
+    const updated = await updateInventoryItem(decodedName, body)
 
-    if (index === -1) {
+    if (!updated) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 })
     }
 
-    inventory[index] = { ...inventory[index], ...body }
-    await writeDataFile('inventory.json', inventory)
-
-    return NextResponse.json({ item: inventory[index], success: true })
+    return NextResponse.json({ item: updated, success: true })
   } catch (error) {
     console.error('Update inventory error:', error)
     return NextResponse.json({ error: 'Failed to update inventory' }, { status: 500 })

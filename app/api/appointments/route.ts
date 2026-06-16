@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { getAppointments, createAppointment } from '@/lib/data'
 import { writeAuditLog } from '@/lib/audit'
 
 export async function GET(request: Request) {
@@ -11,13 +11,9 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const dateFilter = searchParams.get('date')
+    const dateFilter = searchParams.get('date') || undefined
 
-    let appointments = await readDataFile<any[]>('appointments.json')
-
-    if (dateFilter) {
-      appointments = appointments.filter((a) => a.date === dateFilter)
-    }
+    const appointments = await getAppointments(dateFilter)
 
     return NextResponse.json({ appointments })
   } catch (error) {
@@ -34,7 +30,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const appointments = await readDataFile<any[]>('appointments.json')
 
     const appointment = {
       id: `APT-${Date.now()}`,
@@ -42,8 +37,7 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     }
 
-    appointments.push(appointment)
-    await writeDataFile('appointments.json', appointments)
+    await createAppointment(appointment)
 
     await writeAuditLog({
       userId: session.userId,

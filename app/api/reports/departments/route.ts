@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile } from '@/lib/data'
+import { getAllStaff } from '@/lib/data'
 
 export async function GET() {
   try {
@@ -9,12 +9,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const staff = await readDataFile<Record<string, any>>('staff.json')
-    const staffList = Object.values(staff) as any[]
+    const staffList = await getAllStaff()
 
     const departments: Record<string, { staff: number; patients: number }> = {}
     for (const s of staffList) {
-      const dept = s.department || 'General'
+      const dept = (s as any).department || 'General'
       if (!departments[dept]) {
         departments[dept] = { staff: 0, patients: Math.round(Math.random() * 300 + 100) }
       }

@@ -266,6 +266,27 @@ export async function createInvoice(data: any) {
   return data
 }
 
+// Inventory item update (all fields, not just stock)
+// Returns the updated item, or null if not found
+export async function updateInventoryItem(name: string, data: any) {
+  if (await ensureDb()) {
+    // Check existence first
+    const existing = await dbModule.select().from(schemaModule.inventory).where(eq(schemaModule.inventory.name, name)).limit(1)
+    if (!existing[0]) return null
+    const result = await dbModule.update(schemaModule.inventory)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(schemaModule.inventory.name, name))
+      .returning()
+    return result[0] || null
+  }
+  const inventoryData = await readDataFile<any[]>('inventory.json')
+  const idx = inventoryData.findIndex((i: any) => i.name.toLowerCase() === name.toLowerCase())
+  if (idx < 0) return null
+  inventoryData[idx] = { ...inventoryData[idx], ...data }
+  await writeDataFile('inventory.json', inventoryData)
+  return inventoryData[idx]
+}
+
 // Settings helpers
 export async function getSettings() {
   if (await ensureDb()) {

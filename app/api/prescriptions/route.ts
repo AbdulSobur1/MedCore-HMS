@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile, writeDataFile } from '@/lib/data'
+import { getPrescriptions, createPrescription } from '@/lib/data'
 import { writeAuditLog } from '@/lib/audit'
 
 export async function GET() {
@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const prescriptions = await readDataFile<any[]>('prescriptions.json')
+    const prescriptions = await getPrescriptions()
     return NextResponse.json({ prescriptions })
   } catch (error) {
     console.error('Prescriptions list error:', error)
@@ -26,7 +26,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const prescriptions = await readDataFile<any[]>('prescriptions.json')
 
     const prescription = {
       id: `RX-${Date.now()}`,
@@ -35,8 +34,7 @@ export async function POST(request: Request) {
       status: 'Pending',
     }
 
-    prescriptions.push(prescription)
-    await writeDataFile('prescriptions.json', prescriptions)
+    await createPrescription(prescription)
 
     await writeAuditLog({
       userId: session.userId,

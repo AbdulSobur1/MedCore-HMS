@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile } from '@/lib/data'
+import { getPatientPrescriptions } from '@/lib/data'
 
 export async function GET() {
   try {
@@ -9,12 +9,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const prescriptions = await readDataFile<any[]>('prescriptions.json')
-    const patientPrescriptions = prescriptions.filter(
-      (rx: any) => rx.patientId === session.userId
-    )
+    const prescriptions = await getPatientPrescriptions(session.userId)
 
-    return NextResponse.json({ prescriptions: patientPrescriptions })
+    return NextResponse.json({ prescriptions })
   } catch (error) {
     console.error('Patient prescriptions error:', error)
     return NextResponse.json(

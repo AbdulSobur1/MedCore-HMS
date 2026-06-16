@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth'
-import { readDataFile } from '@/lib/data'
+import { getDoctors } from '@/lib/data'
 
 export async function GET() {
   try {
@@ -9,8 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const staff = await readDataFile<Record<string, any>>('staff.json')
-    const doctors = Object.values(staff).filter((s: any) => s.role === 'doctor')
+    const doctors = await getDoctors()
 
     return NextResponse.json({ doctors })
   } catch (error) {
