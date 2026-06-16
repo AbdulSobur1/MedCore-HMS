@@ -1,4 +1,6 @@
-import { sql, eq, and, gte, lte } from 'drizzle-orm'
+import { eq, and, gte, lte, sql } from 'drizzle-orm'
+import { getDb } from './db'
+import * as schema from './schema'
 import fs from 'fs/promises'
 import path from 'path'
 
@@ -27,50 +29,25 @@ export async function writeDataFile<T>(filename: string, data: T): Promise<void>
 
 // -------------------------------------------------------
 // Neon database layer (used when DATABASE_URL is set)
+// Uses static imports from lib/db.ts (no dynamic import())
 // -------------------------------------------------------
-
-let dbInitialized = false
-let dbModule: any = null
-let schemaModule: any = null
-
-async function ensureDb() {
-  if (dbInitialized && dbModule) return true
-  if (!process.env.DATABASE_URL) return false
-
-  try {
-    const { neon } = await import('@neondatabase/serverless')
-    const { drizzle } = await import('drizzle-orm/neon-http')
-    const schema = await import('./schema')
-    const sql = neon(process.env.DATABASE_URL)
-    dbModule = drizzle({ client: sql, schema })
-    schemaModule = schema
-    dbInitialized = true
-    return true
-  } catch {
-    return false
-  }
-}
 
 export { eq, and, gte, lte }
 
-// Re-export all tables
-export async function getTables() {
-  if (await ensureDb()) return schemaModule
-  return null
-}
-
 // Patient helpers
 export async function getAllPatients() {
-  if (await ensureDb()) {
-    return dbModule.select().from(schemaModule.patients)
+  const db = getDb()
+  if (db) {
+    return db.select().from(schema.patients)
   }
   const data = await readDataFile<Record<string, any>>('patients.json')
   return Object.values(data)
 }
 
 export async function getPatientById(patientId: string) {
-  if (await ensureDb()) {
-    const result = await dbModule.select().from(schemaModule.patients).where(eq(schemaModule.patients.patientId, patientId)).limit(1)
+  const db = getDb()
+  if (db) {
+    const result = await db.select().from(schema.patients).where(eq(schema.patients.patientId, patientId)).limit(1)
     return result[0] || null
   }
   const data = await readDataFile<Record<string, any>>('patients.json')
@@ -78,8 +55,9 @@ export async function getPatientById(patientId: string) {
 }
 
 export async function getPatientByEmail(email: string) {
-  if (await ensureDb()) {
-    const result = await dbModule.select().from(schemaModule.patients).where(eq(schemaModule.patients.email, email)).limit(1)
+  const db = getDb()
+  if (db) {
+    const result = await db.select().from(schema.patients).where(eq(schema.patients.email, email)).limit(1)
     return result[0] || null
   }
   const data = await readDataFile<Record<string, any>>('patients.json')
@@ -87,8 +65,9 @@ export async function getPatientByEmail(email: string) {
 }
 
 export async function createPatient(data: any) {
-  if (await ensureDb()) {
-    const result = await dbModule.insert(schemaModule.patients).values(data).returning()
+  const db = getDb()
+  if (db) {
+    const result = await db.insert(schema.patients).values(data).returning()
     return result[0]
   }
   const patients = await readDataFile<Record<string, any>>('patients.json')
@@ -99,16 +78,18 @@ export async function createPatient(data: any) {
 
 // Staff helpers
 export async function getAllStaff() {
-  if (await ensureDb()) {
-    return dbModule.select().from(schemaModule.staff)
+  const db = getDb()
+  if (db) {
+    return db.select().from(schema.staff)
   }
   const data = await readDataFile<Record<string, any>>('staff.json')
   return Object.values(data)
 }
 
 export async function getStaffByEmail(email: string) {
-  if (await ensureDb()) {
-    const result = await dbModule.select().from(schemaModule.staff).where(eq(schemaModule.staff.email, email)).limit(1)
+  const db = getDb()
+  if (db) {
+    const result = await db.select().from(schema.staff).where(eq(schema.staff.email, email)).limit(1)
     return result[0] || null
   }
   const data = await readDataFile<Record<string, any>>('staff.json')
@@ -116,16 +97,18 @@ export async function getStaffByEmail(email: string) {
 }
 
 export async function getDoctors() {
-  if (await ensureDb()) {
-    return dbModule.select().from(schemaModule.staff).where(eq(schemaModule.staff.role, 'doctor'))
+  const db = getDb()
+  if (db) {
+    return db.select().from(schema.staff).where(eq(schema.staff.role, 'doctor'))
   }
   const data = await readDataFile<Record<string, any>>('staff.json')
   return Object.values(data).filter((s: any) => s.role === 'doctor')
 }
 
 export async function createStaff(data: any) {
-  if (await ensureDb()) {
-    const result = await dbModule.insert(schemaModule.staff).values(data).returning()
+  const db = getDb()
+  if (db) {
+    const result = await db.insert(schema.staff).values(data).returning()
     return result[0]
   }
   const staffProfiles = await readDataFile<Record<string, any>>('staff.json')
@@ -136,8 +119,9 @@ export async function createStaff(data: any) {
 
 // OTP helpers
 export async function getOTP(email: string) {
-  if (await ensureDb()) {
-    const result = await dbModule.select().from(schemaModule.otps).where(eq(schemaModule.otps.email, email)).limit(1)
+  const db = getDb()
+  if (db) {
+    const result = await db.select().from(schema.otps).where(eq(schema.otps.email, email)).limit(1)
     return result[0] || null
   }
   const data = await readDataFile<Record<string, any>>('otps.json')
@@ -145,9 +129,10 @@ export async function getOTP(email: string) {
 }
 
 export async function setOTP(email: string, code: string, expiresAt: string) {
-  if (await ensureDb()) {
-    await dbModule.insert(schemaModule.otps).values({ email, code, expiresAt }).onConflictDoUpdate({
-      target: schemaModule.otps.email,
+  const db = getDb()
+  if (db) {
+    await db.insert(schema.otps).values({ email, code, expiresAt }).onConflictDoUpdate({
+      target: schema.otps.email,
       set: { code, expiresAt },
     })
     return
@@ -158,8 +143,9 @@ export async function setOTP(email: string, code: string, expiresAt: string) {
 }
 
 export async function deleteOTP(email: string) {
-  if (await ensureDb()) {
-    await dbModule.delete(schemaModule.otps).where(eq(schemaModule.otps.email, email))
+  const db = getDb()
+  if (db) {
+    await db.delete(schema.otps).where(eq(schema.otps.email, email))
     return
   }
   const data = await readDataFile<Record<string, any>>('otps.json')
@@ -169,11 +155,12 @@ export async function deleteOTP(email: string) {
 
 // Appointment helpers
 export async function getAppointments(dateFilter?: string) {
-  if (await ensureDb()) {
+  const db = getDb()
+  if (db) {
     if (dateFilter) {
-      return dbModule.select().from(schemaModule.appointments).where(eq(schemaModule.appointments.date, dateFilter))
+      return db.select().from(schema.appointments).where(eq(schema.appointments.date, dateFilter))
     }
-    return dbModule.select().from(schemaModule.appointments)
+    return db.select().from(schema.appointments)
   }
   const data = await readDataFile<any[]>('appointments.json')
   if (dateFilter) return data.filter((a: any) => a.date === dateFilter)
@@ -181,8 +168,9 @@ export async function getAppointments(dateFilter?: string) {
 }
 
 export async function createAppointment(data: any) {
-  if (await ensureDb()) {
-    const result = await dbModule.insert(schemaModule.appointments).values(data).returning()
+  const db = getDb()
+  if (db) {
+    const result = await db.insert(schema.appointments).values(data).returning()
     return result[0]
   }
   const appointments = await readDataFile<any[]>('appointments.json')
@@ -192,8 +180,9 @@ export async function createAppointment(data: any) {
 }
 
 export async function getPatientAppointments(patientId: string) {
-  if (await ensureDb()) {
-    return dbModule.select().from(schemaModule.appointments).where(eq(schemaModule.appointments.patientId, patientId))
+  const db = getDb()
+  if (db) {
+    return db.select().from(schema.appointments).where(eq(schema.appointments.patientId, patientId))
   }
   const data = await readDataFile<any[]>('appointments.json')
   return data.filter((a: any) => a.patientId === patientId)
@@ -201,15 +190,17 @@ export async function getPatientAppointments(patientId: string) {
 
 // Prescription helpers
 export async function getPrescriptions() {
-  if (await ensureDb()) {
-    return dbModule.select().from(schemaModule.prescriptions)
+  const db = getDb()
+  if (db) {
+    return db.select().from(schema.prescriptions)
   }
   return readDataFile<any[]>('prescriptions.json')
 }
 
 export async function createPrescription(data: any) {
-  if (await ensureDb()) {
-    const result = await dbModule.insert(schemaModule.prescriptions).values(data).returning()
+  const db = getDb()
+  if (db) {
+    const result = await db.insert(schema.prescriptions).values(data).returning()
     return result[0]
   }
   const prescriptions = await readDataFile<any[]>('prescriptions.json')
@@ -219,8 +210,9 @@ export async function createPrescription(data: any) {
 }
 
 export async function getPatientPrescriptions(patientId: string) {
-  if (await ensureDb()) {
-    return dbModule.select().from(schemaModule.prescriptions).where(eq(schemaModule.prescriptions.patientId, patientId))
+  const db = getDb()
+  if (db) {
+    return db.select().from(schema.prescriptions).where(eq(schema.prescriptions.patientId, patientId))
   }
   const data = await readDataFile<any[]>('prescriptions.json')
   return data.filter((r: any) => r.patientId === patientId)
@@ -228,15 +220,17 @@ export async function getPatientPrescriptions(patientId: string) {
 
 // Inventory helpers
 export async function getInventory() {
-  if (await ensureDb()) {
-    return dbModule.select().from(schemaModule.inventory)
+  const db = getDb()
+  if (db) {
+    return db.select().from(schema.inventory)
   }
   return readDataFile<any[]>('inventory.json')
 }
 
 export async function updateInventoryStock(name: string, stock: number) {
-  if (await ensureDb()) {
-    await dbModule.update(schemaModule.inventory).set({ stock, updatedAt: new Date() }).where(eq(schemaModule.inventory.name, name))
+  const db = getDb()
+  if (db) {
+    await db.update(schema.inventory).set({ stock, updatedAt: new Date() }).where(eq(schema.inventory.name, name))
     return
   }
   const inventoryData = await readDataFile<any[]>('inventory.json')
@@ -249,15 +243,17 @@ export async function updateInventoryStock(name: string, stock: number) {
 
 // Invoice helpers
 export async function getInvoices() {
-  if (await ensureDb()) {
-    return dbModule.select().from(schemaModule.invoices)
+  const db = getDb()
+  if (db) {
+    return db.select().from(schema.invoices)
   }
   return readDataFile<any[]>('invoices.json')
 }
 
 export async function createInvoice(data: any) {
-  if (await ensureDb()) {
-    const result = await dbModule.insert(schemaModule.invoices).values(data).returning()
+  const db = getDb()
+  if (db) {
+    const result = await db.insert(schema.invoices).values(data).returning()
     return result[0]
   }
   const invoicesData = await readDataFile<any[]>('invoices.json')
@@ -269,13 +265,14 @@ export async function createInvoice(data: any) {
 // Inventory item update (all fields, not just stock)
 // Returns the updated item, or null if not found
 export async function updateInventoryItem(name: string, data: any) {
-  if (await ensureDb()) {
+  const db = getDb()
+  if (db) {
     // Check existence first
-    const existing = await dbModule.select().from(schemaModule.inventory).where(eq(schemaModule.inventory.name, name)).limit(1)
+    const existing = await db.select().from(schema.inventory).where(eq(schema.inventory.name, name)).limit(1)
     if (!existing[0]) return null
-    const result = await dbModule.update(schemaModule.inventory)
+    const result = await db.update(schema.inventory)
       .set({ ...data, updatedAt: new Date() })
-      .where(eq(schemaModule.inventory.name, name))
+      .where(eq(schema.inventory.name, name))
       .returning()
     return result[0] || null
   }
@@ -289,20 +286,22 @@ export async function updateInventoryItem(name: string, data: any) {
 
 // Settings helpers
 export async function getSettings() {
-  if (await ensureDb()) {
-    const result = await dbModule.select().from(schemaModule.hospitalSettings).limit(1)
+  const db = getDb()
+  if (db) {
+    const result = await db.select().from(schema.hospitalSettings).limit(1)
     return result[0] || null
   }
   return readDataFile<Record<string, any>>('settings.json')
 }
 
 export async function updateSettings(data: any) {
-  if (await ensureDb()) {
+  const db = getDb()
+  if (db) {
     const existing = await getSettings()
     if (existing) {
-      await dbModule.update(schemaModule.hospitalSettings).set({ ...data, updatedAt: new Date() }).where(eq(schemaModule.hospitalSettings.id, existing.id))
+      await db.update(schema.hospitalSettings).set({ ...data, updatedAt: new Date() }).where(eq(schema.hospitalSettings.id, existing.id))
     } else {
-      await dbModule.insert(schemaModule.hospitalSettings).values(data)
+      await db.insert(schema.hospitalSettings).values(data)
     }
     return getSettings()
   }
@@ -314,8 +313,9 @@ export async function updateSettings(data: any) {
 
 // Audit log helpers
 export async function createAuditLog(data: any) {
-  if (await ensureDb()) {
-    const result = await dbModule.insert(schemaModule.auditLogs).values(data).returning()
+  const db = getDb()
+  if (db) {
+    const result = await db.insert(schema.auditLogs).values(data).returning()
     return result[0]
   }
   const logs = await readDataFile<any[]>('audit_logs.json')
@@ -332,24 +332,25 @@ export async function getAuditLogsFiltered(filters?: {
   page?: number
   limit?: number
 }) {
-  if (await ensureDb()) {
+  const db = getDb()
+  if (db) {
     const conditions: any[] = []
-    if (filters?.userId) conditions.push(eq(schemaModule.auditLogs.userId, filters.userId))
-    if (filters?.resourceType) conditions.push(eq(schemaModule.auditLogs.resourceType, filters.resourceType))
-    if (filters?.from) conditions.push(gte(schemaModule.auditLogs.timestamp, new Date(filters.from)))
-    if (filters?.to) conditions.push(lte(schemaModule.auditLogs.timestamp, new Date(filters.to)))
+    if (filters?.userId) conditions.push(eq(schema.auditLogs.userId, filters.userId))
+    if (filters?.resourceType) conditions.push(eq(schema.auditLogs.resourceType, filters.resourceType))
+    if (filters?.from) conditions.push(gte(schema.auditLogs.timestamp, new Date(filters.from)))
+    if (filters?.to) conditions.push(lte(schema.auditLogs.timestamp, new Date(filters.to)))
 
     const page = filters?.page || 1
     const limit = filters?.limit || 50
     const offset = (page - 1) * limit
 
     const [logs, totalResult] = await Promise.all([
-      dbModule.select().from(schemaModule.auditLogs)
+      db.select().from(schema.auditLogs)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(schemaModule.auditLogs.timestamp)
+        .orderBy(schema.auditLogs.timestamp)
         .limit(limit)
         .offset(offset),
-      dbModule.select({ count: sql<number>`count(*)` }).from(schemaModule.auditLogs),
+      db.select({ count: sql<number>`count(*)` }).from(schema.auditLogs),
     ])
 
     const total = Number(totalResult[0]?.count || 0)
@@ -372,8 +373,9 @@ export async function getAuditLogsFiltered(filters?: {
 
 // Auth helpers using DB
 export async function updatePatientPassword(patientId: string, passwordHash: string) {
-  if (await ensureDb()) {
-    await dbModule.update(schemaModule.patients).set({ passwordHash }).where(eq(schemaModule.patients.patientId, patientId))
+  const db = getDb()
+  if (db) {
+    await db.update(schema.patients).set({ passwordHash }).where(eq(schema.patients.patientId, patientId))
     return
   }
   const patientsData = await readDataFile<Record<string, any>>('patients.json')
@@ -384,8 +386,9 @@ export async function updatePatientPassword(patientId: string, passwordHash: str
 }
 
 export async function updateStaffPassword(staffId: string, passwordHash: string) {
-  if (await ensureDb()) {
-    await dbModule.update(schemaModule.staff).set({ passwordHash }).where(eq(schemaModule.staff.staffId, staffId))
+  const db = getDb()
+  if (db) {
+    await db.update(schema.staff).set({ passwordHash }).where(eq(schema.staff.staffId, staffId))
     return
   }
   const staffData = await readDataFile<Record<string, any>>('staff.json')
