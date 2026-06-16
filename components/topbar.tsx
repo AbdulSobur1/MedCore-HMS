@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Bell, Search, User, Sun, Moon } from 'lucide-react'
+import { Bell, Search, User, Sun, Moon, Globe } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/lib/auth-context'
 
 export function Topbar() {
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showLang, setShowLang] = useState(false)
   const { theme, setTheme } = useTheme()
   const { session } = useAuth()
 
@@ -29,6 +30,30 @@ export function Topbar() {
 
       {/* Right Section */}
       <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 ml-auto lg:ml-8">
+        {/* Language Switcher */}
+        <div className="relative hidden sm:block">
+          <button onClick={() => setShowLang(!showLang)} className="relative p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors" aria-label="Switch language">
+            <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+          </button>
+          {showLang && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowLang(false)} />
+              <div className="absolute right-0 mt-2 w-36 bg-card border border-border rounded-lg shadow-lg z-50 py-1">
+                {[
+                  { code: 'en', label: '🇬🇧 English' },
+                  { code: 'fr', label: '🇫🇷 Français' },
+                  { code: 'ar', label: '🇸🇦 العربية' },
+                ].map((lang) => (
+                  <button key={lang.code} onClick={() => setShowLang(false)}
+                    className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors">
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
         {/* Theme Toggle */}
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}

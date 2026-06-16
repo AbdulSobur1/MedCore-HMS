@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { generateSecureOTP } from '@/lib/auth'
 import { readDataFile, writeDataFile } from '@/lib/data'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +11,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Email is required' },
         { status: 400 }
+      )
+    }
+
+    // Rate limiting: max 5 attempts per email per 15 minutes
+    if (!checkRateLimit(`login:${email}`, 5, 15 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: 'Too many attempts. Please try again later.' },
+        { status: 429 }
       )
     }
 

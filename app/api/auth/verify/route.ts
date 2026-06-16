@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createSessionToken } from '@/lib/auth'
 import { readDataFile, writeDataFile } from '@/lib/data'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +11,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Email and OTP are required' },
         { status: 400 }
+      )
+    }
+
+    // Rate limiting: max 3 OTP attempts per email per 5 minutes
+    if (!checkRateLimit(`verify:${email}`, 3, 5 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: 'Too many OTP attempts. Please request a new OTP.' },
+        { status: 429 }
       )
     }
 

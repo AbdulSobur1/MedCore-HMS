@@ -1,148 +1,133 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Search, TrendingDown } from 'lucide-react'
-
-const PRESCRIPTIONS_DATA = [
-  {
-    id: 'RX001',
-    patientName: 'John Doe',
-    patientId: 'P001',
-    medication: 'Lisinopril 10mg',
-    dosage: 'Once daily',
-    quantity: 30,
-    prescribedBy: 'Dr. Ahmed Hassan',
-    date: '2024-06-01',
-    status: 'Dispensed',
-    expiryDate: '2024-12-01',
-  },
-  {
-    id: 'RX002',
-    patientName: 'Jane Smith',
-    patientId: 'P002',
-    medication: 'Metformin 500mg',
-    dosage: 'Twice daily',
-    quantity: 60,
-    prescribedBy: 'Dr. Emily Garcia',
-    date: '2024-05-28',
-    status: 'Pending',
-    expiryDate: '2024-11-28',
-  },
-  {
-    id: 'RX003',
-    patientName: 'Mike Johnson',
-    patientId: 'P003',
-    medication: 'Digoxin 0.25mg',
-    dosage: 'Once daily',
-    quantity: 30,
-    prescribedBy: 'Dr. Ahmed Hassan',
-    date: '2024-06-01',
-    status: 'Ready',
-    expiryDate: '2024-12-01',
-  },
-  {
-    id: 'RX004',
-    patientName: 'Sarah Wilson',
-    patientId: 'P004',
-    medication: 'Amoxicillin 500mg',
-    dosage: 'Three times daily',
-    quantity: 21,
-    prescribedBy: 'Dr. James Wilson',
-    date: '2024-05-25',
-    status: 'Dispensed',
-    expiryDate: '2025-05-25',
-  },
-]
-
-const INVENTORY_DATA = [
-  { name: 'Lisinopril 10mg', stock: 450, minStock: 100, unit: 'tablets', supplier: 'PharmaCorp' },
-  { name: 'Metformin 500mg', stock: 320, minStock: 150, unit: 'tablets', supplier: 'HealthMeds' },
-  { name: 'Digoxin 0.25mg', stock: 45, minStock: 50, unit: 'tablets', supplier: 'CardioMeds' },
-  { name: 'Amoxicillin 500mg', stock: 890, minStock: 200, unit: 'tablets', supplier: 'BioPharma' },
-  { name: 'Aspirin 100mg', stock: 25, minStock: 100, unit: 'tablets', supplier: 'GenericDrugs' },
-]
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { toast } from 'sonner'
 
 export function PharmacySection() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('All')
   const [activeTab, setActiveTab] = useState<'prescriptions' | 'inventory'>('prescriptions')
+  const [prescriptions, setPrescriptions] = useState<any[]>([])
+  const [inventory, setInventory] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showNewRx, setShowNewRx] = useState(false)
+  const [showReorder, setShowReorder] = useState<any | null>(null)
+  const [reorderQty, setReorderQty] = useState(0)
+  const [newRx, setNewRx] = useState({ patientId: '', medication: '', dosage: '', quantity: 30, prescribedBy: '' })
 
-  const filteredPrescriptions = PRESCRIPTIONS_DATA.filter((rx) => {
-    const matchesSearch =
-      rx.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rx.medication.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => { fetchAll() }, [])
+
+  const fetchAll = async () => {
+    setLoading(true)
+    try {
+      const [rxRes, invRes] = await Promise.all([
+        fetch('/api/prescriptions'),
+        fetch('/api/inventory'),
+      ])
+      if (rxRes.ok) { const d = await rxRes.json(); setPrescriptions(d.prescriptions || []) }
+      if (invRes.ok) { const d = await invRes.json(); setInventory(d.inventory || []) }
+    } catch { toast.error('Failed to load data') }
+    finally { setLoading(false) }
+  }
+
+  const handleNewRx = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const res = await fetch('/api/prescriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRx),
+      })
+      if (res.ok) {
+        toast.success('Prescription created')
+        setShowNewRx(false)
+        setNewRx({ patientId: '', medication: '', dosage: '', quantity: 30, prescribedBy: '' })
+        fetchAll()
+      } else { const d = await res.json(); toast.error(d.error || 'Failed') }
+    } catch { toast.error('Failed to create prescription') }
+  }
+
+  const handleReorder = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!showReorder) return
+    try {
+      const res = await fetch(`/api/inventory/${encodeURIComponent(showReorder.name)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock: reorderQty }),
+      })
+      if (res.ok) {
+        toast.success(`Stock updated for ${showReorder.name}`)
+        setShowReorder(null)
+        fetchAll()
+      } else { const d = await res.json(); toast.error(d.error || 'Failed') }
+    } catch { toast.error('Failed to update stock') }
+  }
+
+  const filteredRx = prescriptions.filter((rx) => {
+    const matchesSearch = (rx.patientName || rx.patientId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (rx.medication || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = selectedStatus === 'All' || rx.status === selectedStatus
     return matchesSearch && matchesStatus
   })
 
-  const filteredInventory = INVENTORY_DATA.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredInv = inventory.filter((item) =>
+    item.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const StatusBadge = ({ status }: { status: string }) => {
+    const colors: Record<string, string> = {
+      Dispensed: 'bg-success/20 text-success',
+      Ready: 'bg-info/20 text-info',
+      Pending: 'bg-warning/20 text-warning',
+    }
+    return <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-muted text-muted-foreground'}`}>{status}</span>
+  }
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Pharmacy Management</h1>
           <p className="text-muted-foreground mt-2">Manage prescriptions and inventory</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity">
-          <Plus className="w-5 h-5" />
-          New Prescription
+        <button onClick={() => setShowNewRx(true)} className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity">
+          <Plus className="w-5 h-5" /> New Prescription
         </button>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-4 border-b border-border">
         {(['prescriptions', 'inventory'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-3 font-medium text-sm transition-colors border-b-2 ${
-              activeTab === tab
-                ? 'border-accent text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className={`px-4 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === tab ? 'border-accent text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
             {tab === 'prescriptions' ? 'Prescriptions' : 'Inventory'}
           </button>
         ))}
       </div>
 
-      {/* Prescriptions Tab */}
       {activeTab === 'prescriptions' && (
         <div className="space-y-6">
-          {/* Filters */}
           <div className="flex gap-4 items-center">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search by patient or medication..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-              />
+              <input type="text" placeholder="Search by patient or medication..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent" />
             </div>
             <div className="flex gap-2">
-              {['All', 'Pending', 'Ready', 'Dispensed'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setSelectedStatus(status)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                    selectedStatus === status
-                      ? 'bg-accent text-accent-foreground'
-                      : 'bg-card border border-border text-foreground hover:bg-muted'
-                  }`}
-                >
-                  {status}
-                </button>
+              {['All', 'Pending', 'Ready', 'Dispensed'].map((s) => (
+                <button key={s} onClick={() => setSelectedStatus(s)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${selectedStatus === s ? 'bg-accent text-accent-foreground' : 'bg-card border border-border text-foreground hover:bg-muted'}`}>{s}</button>
               ))}
             </div>
           </div>
-
-          {/* Prescriptions Table */}
           <div className="bg-card border border-border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -152,32 +137,26 @@ export function PharmacySection() {
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground text-sm">Patient</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground text-sm">Medication</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground text-sm">Dosage</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground text-sm">Prescribed By</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground text-sm">Status</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground text-sm">Date</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPrescriptions.map((rx) => (
+                  {loading ? (
+                    [...Array(4)].map((_, i) => (
+                      <tr key={i} className="border-b border-border">
+                        {[...Array(6)].map((__, j) => (
+                          <td key={j} className="py-4 px-6"><Skeleton className="h-4 w-16" /></td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : filteredRx.map((rx) => (
                     <tr key={rx.id} className="border-b border-border hover:bg-muted transition-colors">
                       <td className="py-4 px-6 text-foreground text-sm font-medium">{rx.id}</td>
-                      <td className="py-4 px-6 text-foreground text-sm">{rx.patientName}</td>
+                      <td className="py-4 px-6 text-foreground text-sm">{rx.patientName || rx.patientId}</td>
                       <td className="py-4 px-6 text-foreground text-sm">{rx.medication}</td>
                       <td className="py-4 px-6 text-foreground text-sm">{rx.dosage}</td>
-                      <td className="py-4 px-6 text-foreground text-sm">{rx.prescribedBy}</td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                            rx.status === 'Dispensed'
-                              ? 'bg-success/20 text-success'
-                              : rx.status === 'Ready'
-                                ? 'bg-info/20 text-info'
-                                : 'bg-warning/20 text-warning'
-                          }`}
-                        >
-                          {rx.status}
-                        </span>
-                      </td>
+                      <td className="py-4 px-6"><StatusBadge status={rx.status} /></td>
                       <td className="py-4 px-6 text-muted-foreground text-sm">{rx.date}</td>
                     </tr>
                   ))}
@@ -188,66 +167,43 @@ export function PharmacySection() {
         </div>
       )}
 
-      {/* Inventory Tab */}
       {activeTab === 'inventory' && (
         <div className="space-y-6">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search medications..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-            />
+            <input type="text" placeholder="Search medications..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent" />
           </div>
-
-          {/* Inventory Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredInventory.map((item, idx) => {
+            {loading ? (
+              [...Array(3)].map((_, i) => (
+                <div key={i} className="bg-card border border-border rounded-lg p-6 space-y-4">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              ))
+            ) : filteredInv.map((item, idx) => {
               const isLowStock = item.stock <= item.minStock
               return (
                 <div key={idx} className="bg-card border border-border rounded-lg p-6">
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
-                    {isLowStock && (
-                      <TrendingDown className="w-5 h-5 text-destructive" />
-                    )}
+                    {isLowStock && <TrendingDown className="w-5 h-5 text-destructive" />}
                   </div>
-
                   <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Current Stock</p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {item.stock}{' '}
-                        <span className="text-sm text-muted-foreground">{item.unit}</span>
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Minimum Stock Level</p>
-                      <p className="text-sm text-foreground">{item.minStock} {item.unit}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Supplier</p>
-                      <p className="text-sm text-foreground">{item.supplier}</p>
-                    </div>
-
-                    {/* Stock Bar */}
+                    <div><p className="text-xs text-muted-foreground mb-1">Current Stock</p>
+                      <p className="text-2xl font-bold text-foreground">{item.stock} <span className="text-sm text-muted-foreground">{item.unit}</span></p></div>
+                    <div><p className="text-xs text-muted-foreground mb-1">Min Stock</p><p className="text-sm text-foreground">{item.minStock} {item.unit}</p></div>
+                    <div><p className="text-xs text-muted-foreground mb-1">Supplier</p><p className="text-sm text-foreground">{item.supplier}</p></div>
                     <div className="mt-4">
                       <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                        <div
-                          className={`h-full ${isLowStock ? 'bg-destructive' : 'bg-success'}`}
-                          style={{ width: `${Math.min((item.stock / (item.minStock * 2)) * 100, 100)}%` }}
-                        ></div>
+                        <div className={`h-full ${isLowStock ? 'bg-destructive' : 'bg-success'}`}
+                          style={{ width: `${Math.min((item.stock / (item.minStock * 2)) * 100, 100)}%` }} />
                       </div>
                     </div>
-
-                    <button className="w-full mt-4 px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity text-sm">
-                      Reorder
-                    </button>
+                    <button onClick={() => { setShowReorder(item); setReorderQty(item.stock) }}
+                      className="w-full mt-4 px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:opacity-90 transition-opacity text-sm">Reorder</button>
                   </div>
                 </div>
               )
@@ -255,6 +211,34 @@ export function PharmacySection() {
           </div>
         </div>
       )}
+
+      <Dialog open={showNewRx} onOpenChange={setShowNewRx}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>New Prescription</DialogTitle></DialogHeader>
+          <form onSubmit={handleNewRx} className="space-y-4">
+            <input placeholder="Patient ID" value={newRx.patientId} onChange={(e) => setNewRx(r => ({ ...r, patientId: e.target.value }))} className="w-full px-4 py-2 rounded-lg bg-muted border border-border text-sm" required />
+            <input placeholder="Medication" value={newRx.medication} onChange={(e) => setNewRx(r => ({ ...r, medication: e.target.value }))} className="w-full px-4 py-2 rounded-lg bg-muted border border-border text-sm" required />
+            <input placeholder="Dosage (e.g. Once daily)" value={newRx.dosage} onChange={(e) => setNewRx(r => ({ ...r, dosage: e.target.value }))} className="w-full px-4 py-2 rounded-lg bg-muted border border-border text-sm" />
+            <input type="number" placeholder="Quantity" value={newRx.quantity} onChange={(e) => setNewRx(r => ({ ...r, quantity: parseInt(e.target.value) || 0 }))} className="w-full px-4 py-2 rounded-lg bg-muted border border-border text-sm" />
+            <input placeholder="Prescribed By" value={newRx.prescribedBy} onChange={(e) => setNewRx(r => ({ ...r, prescribedBy: e.target.value }))} className="w-full px-4 py-2 rounded-lg bg-muted border border-border text-sm" />
+            <button type="submit" className="w-full py-2 px-4 bg-accent text-accent-foreground rounded-lg font-medium text-sm hover:opacity-90">Create Prescription</button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!showReorder} onOpenChange={(o) => { if (!o) setShowReorder(null) }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Reorder Stock</DialogTitle></DialogHeader>
+          {showReorder && (
+            <form onSubmit={handleReorder} className="space-y-4">
+              <p className="text-sm text-foreground">{showReorder.name}</p>
+              <input type="number" placeholder="New stock quantity" value={reorderQty} onChange={(e) => setReorderQty(parseInt(e.target.value) || 0)}
+                className="w-full px-4 py-2 rounded-lg bg-muted border border-border text-sm" />
+              <button type="submit" className="w-full py-2 px-4 bg-accent text-accent-foreground rounded-lg font-medium text-sm hover:opacity-90">Update Stock</button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
