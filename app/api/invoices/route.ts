@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       ...body,
       date: body.date || new Date().toISOString().split('T')[0],
       status: body.status || 'Pending',
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     }
 
     await createInvoice(invoice)

@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       passwordHash,
       department: 'Administration',
       phone: '',
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       isActive: true,
     }
 

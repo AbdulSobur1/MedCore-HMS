@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const patient = {
       patientId,
       ...validated,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     }
 
     await createPatient(patient)

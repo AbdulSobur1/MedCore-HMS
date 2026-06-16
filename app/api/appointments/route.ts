@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     const appointment = {
       id: `APT-${Date.now()}`,
       ...body,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     }
 
     await createAppointment(appointment)
