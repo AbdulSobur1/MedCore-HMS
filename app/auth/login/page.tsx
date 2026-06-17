@@ -61,7 +61,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-lg bg-[--accent] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-[#0D7A6B] flex items-center justify-center">
             <Stethoscope className="w-6 h-6 text-white" />
           </div>
           <span className="text-xl font-semibold text-[--text-1]">MedCore HMS</span>
@@ -130,7 +130,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 px-4 bg-[--accent] text-white rounded-lg font-medium text-sm border border-white/20 shadow-lg shadow-[--accent]/30 hover:shadow-xl hover:shadow-[--accent]/40 hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:translate-y-0 flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 bg-[#0D7A6B] text-white rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:translate-y-0 flex items-center justify-center gap-2"
             >
               {isLoading && <Loader className="w-4 h-4 animate-spin" />}
               {isLoading ? 'Signing in...' : 'Sign In'}

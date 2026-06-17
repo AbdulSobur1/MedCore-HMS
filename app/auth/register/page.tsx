@@ -76,7 +76,7 @@ export default function RegisterPage() {
       case 'lastName': return !value ? 'Last name is required' : ''
       case 'email': return !value ? 'Email is required' : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'Invalid email address' : ''
       case 'phone': return !value ? 'Phone is required' : !/^\+?[0-9\-\s]{7,20}$/.test(value) ? 'Enter a valid phone number (e.g. +234-800-000-0000)' : ''
-      case 'dob': return !value ? 'Date of birth is required' : ''
+      case 'dob': return !value ? 'Date of birth is required' : !/^\d{2}\/\d{2}\/\d{4}$/.test(value) ? 'Use dd/mm/yyyy format' : ''
       case 'password': return !value ? 'Password is required' : value.length < 8 ? 'At least 8 characters required' : ''
       case 'confirmPassword': return !value ? 'Please confirm your password' : value !== form.password ? 'Passwords do not match' : ''
       default: return ''
@@ -112,10 +112,14 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
+      // Convert dd/mm/yyyy to ISO date string for the API
+      const [d, m, y] = form.dob.split('/')
+      const isoDob = `${y}-${m}-${d}`
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, dob: isoDob }),
       })
 
       const data = await response.json()
@@ -147,7 +151,7 @@ export default function RegisterPage() {
             <p className="text-xs text-[--text-3] mb-8">Keep this safe for your records.</p>
             <Link
               href="/auth/login"
-              className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-[--accent] text-white rounded-lg font-medium text-sm hover:bg-[--accent-hover] transition-colors"
+              className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-[#0D7A6B] text-white rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-[1px] active:translate-y-0 transition-all"
             >
               Go to Login
             </Link>
@@ -162,7 +166,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-lg bg-[--accent] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-[#0D7A6B] flex items-center justify-center">
             <Stethoscope className="w-6 h-6 text-white" />
           </div>
           <span className="text-xl font-semibold text-[--text-1]">MedCore HMS</span>
@@ -214,9 +218,10 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-[--text-2] mb-1.5">Date of Birth *</label>
-                <input type="date" name="dob" value={form.dob} onChange={handleChange} onBlur={handleBlur}
-                  className={`w-full px-3 py-2.5 rounded-lg bg-[--surface-2] border text-sm text-[--text-1] focus:outline-none focus:ring-2 focus:ring-[--accent] focus:border-transparent transition-colors ${fieldErrors.dob ? 'border-[--danger]' : 'border-[--border]'}`} required />
-                <p className="text-[11px] text-[--text-3] mt-1">Format: dd/mm/yyyy</p>
+                <input type="text" name="dob" value={form.dob} onChange={handleChange} onBlur={handleBlur}
+                  placeholder="dd/mm/yyyy"
+                  className={`w-full px-3 py-2.5 rounded-lg bg-[--surface-2] border text-sm text-[--text-1] placeholder:text-[--text-3] focus:outline-none focus:ring-2 focus:ring-[--accent] focus:border-transparent transition-colors ${fieldErrors.dob ? 'border-[--danger]' : 'border-[--border]'}`} required />
+                <p className="text-[11px] text-[--text-3] mt-1">Format: dd/mm/yyyy (e.g. 15/08/1990)</p>
                 {fieldErrors.dob && <p className="text-[11px] text-[--danger] mt-1">{fieldErrors.dob}</p>}
               </div>
               <div>
@@ -318,7 +323,7 @@ export default function RegisterPage() {
             )}
 
             <button type="submit" disabled={isLoading}
-              className="w-full py-2.5 px-4 bg-[--accent] text-white rounded-lg font-medium text-sm border border-white/20 shadow-lg shadow-[--accent]/30 hover:shadow-xl hover:shadow-[--accent]/40 hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:translate-y-0 flex items-center justify-center gap-2">
+              className="w-full py-2.5 px-4 bg-[#0D7A6B] text-white rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:translate-y-0 flex items-center justify-center gap-2">
               {isLoading && <Loader className="w-4 h-4 animate-spin" />}
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>

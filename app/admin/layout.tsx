@@ -8,8 +8,6 @@ import {
   LayoutDashboard, Users, Calendar, Stethoscope,
   Pill, CreditCard, BarChart3, ShieldCheck
 } from 'lucide-react'
-import { Toaster } from 'sonner'
-
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
   { label: 'Patients', icon: Users, href: '/admin/patients' },
@@ -44,7 +42,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {children}
         </main>
       </div>
-      <Toaster richColors closeButton position="top-right" duration={5000} />
     </div>
   )
 }

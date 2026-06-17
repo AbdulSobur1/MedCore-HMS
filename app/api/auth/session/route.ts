@@ -7,12 +7,12 @@ export async function GET() {
     const token = cookieHeader.get('session')?.value
 
     if (!token) {
-      return NextResponse.json({ error: 'No session' }, { status: 401 })
+      return NextResponse.json({ session: null })
     }
 
     const session = await verifySessionToken(token)
     if (!session) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+      return NextResponse.json({ session: null })
     }
 
     return NextResponse.json({

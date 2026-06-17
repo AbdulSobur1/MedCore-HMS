@@ -5,8 +5,6 @@ import { useAuth } from '@/lib/auth-context'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Topbar } from '@/components/layout/Topbar'
 import { LayoutDashboard, Users, Calendar, FileText } from 'lucide-react'
-import { Toaster } from 'sonner'
-
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/doctor/dashboard' },
   { label: 'My Patients', icon: Users, href: '/doctor/patients' },
@@ -33,7 +31,6 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
         <Topbar title={`Dr. ${session.name}`} onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>
-      <Toaster richColors closeButton position="top-right" duration={5000} />
     </div>
   )
 }
