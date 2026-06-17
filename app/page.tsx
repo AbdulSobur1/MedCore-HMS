@@ -5,6 +5,15 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { Loader } from 'lucide-react'
 
+const ROLE_HOME: Record<string, string> = {
+  admin:        '/admin/dashboard',
+  doctor:       '/doctor/dashboard',
+  receptionist: '/receptionist/dashboard',
+  pharmacist:   '/pharmacist/dashboard',
+  accountant:   '/accountant/dashboard',
+  patient:      '/patient/dashboard',
+}
+
 export default function Home() {
   const router = useRouter()
   const { session, isLoading } = useAuth()
@@ -13,21 +22,22 @@ export default function Home() {
     if (isLoading) return
 
     if (session) {
-      if (session.userType === 'patient') {
-        router.push('/patient/dashboard')
-      } else if (session.userType === 'staff') {
-        router.push('/staff/dashboard')
+      const redirect = ROLE_HOME[session.role]
+      if (redirect) {
+        router.push(redirect)
+      } else {
+        router.push('/auth/login')
       }
     } else {
-      router.push('/auth/landing')
+      router.push('/auth/login')
     }
   }, [session, isLoading, router])
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen bg-[--bg] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <Loader className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Loading...</p>
+        <Loader className="w-8 h-8 animate-spin text-[--accent]" />
+        <p className="text-[--text-3] text-sm">Loading...</p>
       </div>
     </div>
   )

@@ -1,13 +1,14 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface SessionPayload {
-  userType: 'patient' | 'staff'
-  userId: string
+  id: string
   email: string
   name: string
-  role?: string
+  role: string
+  type: string
 }
 
 interface AuthContextType {
@@ -26,13 +27,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check session via API on mount
     async function checkSession() {
       try {
         const response = await fetch('/api/auth/session')
         if (response.ok) {
           const data = await response.json()
-          setSession(data.session)
+          if (data.session) {
+            setSession(data.session)
+          }
         }
       } catch {
         // No valid session
@@ -63,8 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         login,
         logout,
-        isPatient: session?.userType === 'patient',
-        isStaff: session?.userType === 'staff',
+        isPatient: session?.type === 'patient',
+        isStaff: session?.type === 'staff',
       }}
     >
       {children}

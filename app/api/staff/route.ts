@@ -11,20 +11,25 @@ export async function GET() {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const session = await verifySessionToken(token)
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
-    const doctors = await db.select({
+    const result = await db.select({
       id: staff.id,
       name: staff.name,
-      department: staff.department,
       email: staff.email,
+      role: staff.role,
+      department: staff.department,
       phone: staff.phone,
       isActive: staff.isActive,
-    }).from(staff).where(eq(staff.role, 'doctor'))
+      lastLogin: staff.lastLogin,
+      createdAt: staff.createdAt,
+    }).from(staff).orderBy(staff.createdAt)
 
-    return NextResponse.json({ doctors })
+    return NextResponse.json({ staff: result })
   } catch (error) {
-    console.error('Doctors list error:', error)
-    return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 })
+    console.error('Staff list error:', error)
+    return NextResponse.json({ error: 'Failed to fetch staff' }, { status: 500 })
   }
 }

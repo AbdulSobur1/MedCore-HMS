@@ -1,113 +1,119 @@
-import { pgTable, text, integer, boolean, decimal, jsonb, timestamp, serial, uniqueIndex, primaryKey } from 'drizzle-orm/pg-core'
+import {
+  pgTable, text, timestamp, boolean,
+  integer, pgEnum, uuid
+} from 'drizzle-orm/pg-core'
 
-export const patients = pgTable('patients', {
-  patientId: text('patient_id').primaryKey(),
-  email: text('email').notNull().unique(),
-  name: text('name').notNull(),
-  phone: text('phone').notNull(),
-  dateOfBirth: text('date_of_birth'),
-  gender: text('gender'),
-  bloodType: text('blood_type'),
-  address: text('address'),
-  emergencyContact: text('emergency_contact'),
-  passwordHash: text('password_hash'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
+export const roleEnum = pgEnum('role', [
+  'admin', 'doctor', 'receptionist', 'pharmacist', 'accountant'
+])
+export const statusEnum = pgEnum('patient_status', [
+  'admitted', 'outpatient', 'critical', 'discharged'
+])
+export const apptStatusEnum = pgEnum('appointment_status', [
+  'confirmed', 'pending', 'cancelled', 'urgent'
+])
+export const prescStatusEnum = pgEnum('prescription_status', [
+  'pending', 'dispensed'
+])
+export const invoiceStatusEnum = pgEnum('invoice_status', [
+  'paid', 'pending', 'overdue', 'processing'
+])
 
+// Staff — doctors, receptionists, pharmacists, accountants, admin
 export const staff = pgTable('staff', {
-  staffId: text('staff_id').primaryKey(),
-  email: text('email').notNull().unique(),
-  name: text('name').notNull(),
-  role: text('role').notNull(),
-  phone: text('phone'),
-  department: text('department'),
-  passwordHash: text('password_hash'),
-  isActive: boolean('is_active').default(true),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  invitedAt: text('invited_at'),
-  acceptedAt: text('accepted_at'),
+  id:           uuid('id').primaryKey().defaultRandom(),
+  name:         text('name').notNull(),
+  email:        text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  role:         roleEnum('role').notNull(),
+  department:   text('department'),
+  phone:        text('phone'),
+  isActive:     boolean('is_active').notNull().default(true),
+  lastLogin:    timestamp('last_login'),
+  createdAt:    timestamp('created_at').notNull().defaultNow(),
 })
 
-export const otps = pgTable('otps', {
-  email: text('email').primaryKey(),
-  code: text('code').notNull(),
-  expiresAt: text('expires_at').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+// Staff invites — sent by admin, consumed once by invited staff
+export const staffInvites = pgTable('staff_invites', {
+  id:        uuid('id').primaryKey().defaultRandom(),
+  email:     text('email').notNull(),
+  role:      roleEnum('role').notNull(),
+  department:text('department'),
+  token:     text('token').notNull().unique(),
+  usedAt:    timestamp('used_at'),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+// Patients — self-registered
+export const patients = pgTable('patients', {
+  id:               uuid('id').primaryKey().defaultRandom(),
+  patientCode:      text('patient_code').notNull().unique(),
+  firstName:        text('first_name').notNull(),
+  lastName:         text('last_name').notNull(),
+  email:            text('email').notNull().unique(),
+  passwordHash:     text('password_hash').notNull(),
+  phone:            text('phone').notNull(),
+  dob:              text('dob').notNull(),
+  gender:           text('gender').notNull(),
+  bloodType:        text('blood_type'),
+  address:          text('address'),
+  emergencyContact: text('emergency_contact'),
+  insurance:        text('insurance'),
+  status:           statusEnum('status').notNull().default('outpatient'),
+  ward:             text('ward'),
+  assignedDoctorId: uuid('assigned_doctor_id').references(() => staff.id),
+  createdAt:        timestamp('created_at').notNull().defaultNow(),
 })
 
 export const appointments = pgTable('appointments', {
-  id: text('id').primaryKey(),
-  patientId: text('patient_id'),
-  patientName: text('patient_name'),
-  doctor: text('doctor'),
-  department: text('department'),
-  date: text('date'),
-  time: text('time'),
-  room: text('room'),
-  status: text('status').default('Scheduled'),
-  type: text('type'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  id:          uuid('id').primaryKey().defaultRandom(),
+  patientId:   uuid('patient_id').notNull().references(() => patients.id),
+  doctorId:    uuid('doctor_id').notNull().references(() => staff.id),
+  type:        text('type').notNull(),
+  department:  text('department'),
+  scheduledAt: timestamp('scheduled_at').notNull(),
+  status:      apptStatusEnum('status').notNull().default('pending'),
+  notes:       text('notes'),
+  createdAt:   timestamp('created_at').notNull().defaultNow(),
 })
 
 export const prescriptions = pgTable('prescriptions', {
-  id: text('id').primaryKey(),
-  patientId: text('patient_id'),
-  patientName: text('patient_name'),
-  medication: text('medication'),
-  dosage: text('dosage'),
-  quantity: integer('quantity'),
-  prescribedBy: text('prescribed_by'),
-  date: text('date'),
-  status: text('status').default('Pending'),
-  expiryDate: text('expiry_date'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  id:        uuid('id').primaryKey().defaultRandom(),
+  patientId: uuid('patient_id').notNull().references(() => patients.id),
+  doctorId:  uuid('doctor_id').notNull().references(() => staff.id),
+  diagnosis: text('diagnosis').notNull(),
+  notes:     text('notes'),
+  status:    prescStatusEnum('status').notNull().default('pending'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
-export const inventory = pgTable('inventory', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull().unique(),
-  stock: integer('stock').default(0),
-  minStock: integer('min_stock').default(0),
-  unit: text('unit'),
-  supplier: text('supplier'),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+export const prescriptionDrugs = pgTable('prescription_drugs', {
+  id:             uuid('id').primaryKey().defaultRandom(),
+  prescriptionId: uuid('prescription_id').notNull()
+                    .references(() => prescriptions.id),
+  drugName:  text('drug_name').notNull(),
+  dosage:    text('dosage').notNull(),
+  frequency: text('frequency').notNull(),
+  duration:  text('duration').notNull(),
+})
+
+export const drugs = pgTable('drugs', {
+  id:           uuid('id').primaryKey().defaultRandom(),
+  name:         text('name').notNull(),
+  quantity:     integer('quantity').notNull().default(0),
+  unit:         text('unit').notNull().default('units'),
+  reorderLevel: integer('reorder_level').notNull().default(50),
+  updatedAt:    timestamp('updated_at').notNull().defaultNow(),
 })
 
 export const invoices = pgTable('invoices', {
-  id: text('id').primaryKey(),
-  patientId: text('patient_id'),
-  patientName: text('patient_name'),
-  amount: text('amount'), // stored as string to handle Decimal precision
-  services: text('services').array(),
-  date: text('date'),
-  dueDate: text('due_date'),
-  status: text('status').default('Pending'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
-
-export const auditLogs = pgTable('audit_logs', {
-  id: text('id').primaryKey(),
-  userId: text('user_id'),
-  userRole: text('user_role'),
-  action: text('action'),
-  resourceType: text('resource_type'),
-  resourceId: text('resource_id'),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-  metadata: jsonb('metadata'),
-  timestamp: timestamp('timestamp').defaultNow().notNull(),
-})
-
-export const hospitalSettings = pgTable('hospital_settings', {
-  id: serial('id').primaryKey(),
-  hospitalName: text('hospital_name').default('MedCore Hospital'),
-  email: text('email').default('admin@medcore.hospital'),
-  phone: text('phone'),
-  currency: text('currency').default('USD'),
-  locale: text('locale').default('en-US'),
-  timezone: text('timezone').default('UTC'),
-  notifications: jsonb('notifications').default({ email: true, sms: true }),
-  maintenanceMode: boolean('maintenance_mode').default(false),
-  twoFactor: boolean('two_factor').default(true),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  id:            uuid('id').primaryKey().defaultRandom(),
+  invoiceCode:   text('invoice_code').notNull().unique(),
+  patientId:     uuid('patient_id').notNull().references(() => patients.id),
+  service:       text('service').notNull(),
+  amount:        integer('amount').notNull(),
+  paymentMethod: text('payment_method'),
+  status:        invoiceStatusEnum('status').notNull().default('pending'),
+  createdAt:     timestamp('created_at').notNull().defaultNow(),
 })
