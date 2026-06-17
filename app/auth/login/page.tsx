@@ -75,11 +75,14 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-[--danger-soft] border border-[--danger]/20 rounded-lg text-sm text-[--danger]">
-                {error}
-              </div>
-            )}
+            {/* Error message — always reserve space to prevent layout shift */}
+            <div className="min-h-[44px]">
+              {error ? (
+                <div className="p-3 bg-[--danger-soft] border border-[--danger]/20 rounded-lg text-sm text-[--danger] animate-in fade-in">
+                  {error}
+                </div>
+              ) : null}
+            </div>
 
             <div>
               <label className="block text-xs font-medium text-[--text-2] mb-1.5">Email</label>
@@ -100,7 +103,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   className="w-full px-3 py-2.5 pr-10 rounded-lg bg-[--surface-2] border border-[--border] text-sm text-[--text-1] placeholder:text-[--text-3] focus:outline-none focus:ring-2 focus:ring-[--accent] focus:border-transparent transition-colors"
                   required
                 />
@@ -114,10 +117,20 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Forgot Password */}
+            <div className="flex justify-end">
+              <Link
+                href="/auth/forgot-password"
+                className="text-xs text-[--accent] font-medium hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 px-4 bg-[--accent] text-white rounded-lg font-medium text-sm hover:bg-[--accent-hover] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 bg-[--accent] text-white rounded-lg font-medium text-sm shadow-sm shadow-[--accent]/20 hover:shadow-md hover:shadow-[--accent]/25 hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm disabled:hover:translate-y-0 flex items-center justify-center gap-2"
             >
               {isLoading && <Loader className="w-4 h-4 animate-spin" />}
               {isLoading ? 'Signing in...' : 'Sign In'}

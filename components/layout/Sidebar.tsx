@@ -43,9 +43,9 @@ export function Sidebar({ navItems, open, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-[220px] bg-[--surface] border-r border-[--border] flex flex-col z-40 transition-transform duration-300
+        className={`fixed left-0 top-0 h-screen w-[220px] bg-[--surface] border-r border-[--border] flex flex-col z-40 transition-transform duration-300 shrink-0
           ${open ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0 lg:static lg:z-auto`}
+          lg:translate-x-0 lg:static lg:z-auto lg:h-auto lg:min-h-screen`}
       >
         {/* Logo */}
         <div className="h-14 border-b border-[--border] px-4 flex items-center gap-2.5 shrink-0">

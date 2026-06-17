@@ -29,7 +29,8 @@ export default function Home() {
         router.push('/auth/login')
       }
     } else {
-      router.push('/auth/login')
+      // Show landing page for unauthenticated users
+      router.push('/auth/landing')
     }
   }, [session, isLoading, router])
 
