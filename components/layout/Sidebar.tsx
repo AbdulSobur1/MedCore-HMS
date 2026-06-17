@@ -41,11 +41,13 @@ export function Sidebar({ navItems, open, onClose }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — always fixed, content area uses lg:pl-[220px] to clear it */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-[220px] bg-[--surface] border-r border-[--border] flex flex-col z-40 transition-transform duration-300 shrink-0
+        className={`fixed left-0 top-0 h-screen w-[220px] z-40
+          bg-[--surface] border-r border-[--border] flex flex-col
+          transition-transform duration-300
           ${open ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0 lg:static lg:z-auto lg:h-auto lg:min-h-screen`}
+          lg:translate-x-0`}
       >
         {/* Logo */}
         <div className="h-14 border-b border-[--border] px-4 flex items-center gap-2.5 shrink-0">

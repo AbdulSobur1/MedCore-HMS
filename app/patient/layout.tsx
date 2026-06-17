@@ -29,9 +29,9 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
   if (!session) return null
 
   return (
-    <div className="min-h-screen bg-[--bg] flex">
+    <div className="min-h-screen bg-[--bg]">
       <Sidebar navItems={navItems} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="pl-0 lg:pl-[220px] flex flex-col min-h-screen">
         <Topbar title={`Patient - ${session.name}`} onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>

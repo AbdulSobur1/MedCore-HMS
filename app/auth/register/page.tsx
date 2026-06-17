@@ -318,7 +318,7 @@ export default function RegisterPage() {
             )}
 
             <button type="submit" disabled={isLoading}
-              className="w-full py-2.5 px-4 bg-[--accent] text-white rounded-lg font-medium text-sm shadow-sm shadow-[--accent]/20 hover:shadow-md hover:shadow-[--accent]/25 hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm disabled:hover:translate-y-0 flex items-center justify-center gap-2">
+              className="w-full py-2.5 px-4 bg-[--accent] text-white rounded-lg font-medium text-sm border border-white/20 shadow-lg shadow-[--accent]/30 hover:shadow-xl hover:shadow-[--accent]/40 hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:translate-y-0 flex items-center justify-center gap-2">
               {isLoading && <Loader className="w-4 h-4 animate-spin" />}
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
