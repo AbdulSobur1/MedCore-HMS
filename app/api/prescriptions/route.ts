@@ -11,7 +11,7 @@ export async function GET() {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const session = await verifySessionToken(token)
-    if (!session || (session.role !== 'admin' && session.role !== 'doctor' && session.role !== 'pharmacist')) {
+    if (!session || (session.role !== 'admin' && session.role !== 'doctor' && session.role !== 'pharmacist' && session.role !== 'patient')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -19,6 +19,10 @@ export async function GET() {
     if (session.role === 'doctor') {
       result = await db.select().from(prescriptions)
         .where(eq(prescriptions.doctorId, session.id))
+        .orderBy(prescriptions.createdAt)
+    } else if (session.role === 'patient') {
+      result = await db.select().from(prescriptions)
+        .where(eq(prescriptions.patientId, session.id))
         .orderBy(prescriptions.createdAt)
     } else {
       result = await db.select().from(prescriptions)
