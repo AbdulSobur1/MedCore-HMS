@@ -1,24 +1,63 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { staff, staffInvites } from '@/lib/schema'
-import { eq, and, isNull, gt } from 'drizzle-orm'
+import { eq, and, isNull, gt, desc } from 'drizzle-orm'
 import { verifySessionToken } from '@/lib/auth'
 import { randomUUID } from 'crypto'
 
+const STAFF_ROLES = ['doctor', 'receptionist', 'pharmacist', 'accountant'] as const
+
+async function requireAdmin() {
+  const cookieHeader = await import('next/headers').then(m => m.cookies())
+  const token = cookieHeader.get('session')?.value
+  if (!token) return null
+
+  const session = await verifySessionToken(token)
+  return session?.role === 'admin' ? session : null
+}
+
+export async function GET() {
+  try {
+    const session = await requireAdmin()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const result = await db.select({
+      id: staffInvites.id,
+      email: staffInvites.email,
+      role: staffInvites.role,
+      department: staffInvites.department,
+      token: staffInvites.token,
+      usedAt: staffInvites.usedAt,
+      expiresAt: staffInvites.expiresAt,
+      createdAt: staffInvites.createdAt,
+    }).from(staffInvites)
+      .where(and(isNull(staffInvites.usedAt), gt(staffInvites.expiresAt, new Date())))
+      .orderBy(desc(staffInvites.createdAt))
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    return NextResponse.json({
+      invites: result.map(invite => ({
+        ...invite,
+        inviteUrl: `${appUrl}/auth/invite/${invite.token}`,
+      })),
+    })
+  } catch (error) {
+    console.error('Invites list error:', error)
+    return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 })
+  }
+}
+
 export async function POST(request: Request) {
   try {
-    const cookieHeader = await import('next/headers').then(m => m.cookies())
-    const token = cookieHeader.get('session')?.value
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const session = await verifySessionToken(token)
-    if (!session || session.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const session = await requireAdmin()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { email, role, department } = await request.json()
     if (!email || !role) {
       return NextResponse.json({ error: 'Email and role are required' }, { status: 400 })
+    }
+    if (!STAFF_ROLES.includes(role)) {
+      return NextResponse.json({ error: 'Invalid staff role' }, { status: 400 })
     }
 
     // Check not already staff

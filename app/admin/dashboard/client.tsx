@@ -12,7 +12,7 @@ interface Props {
   todayAppts: number
   activeStaff: number
   pendingInvoices: number
-  weeklyData: { day: string; admitted: number; discharged: number }[]
+  weeklyData: { day: string; registered: number; discharged: number }[]
   departmentData: { name: string; count: number }[]
   recentPatients: any[]
   todayAppointments: any[]
@@ -100,5 +100,4 @@ export function AdminDashboardClient({
     </div>
   )
 }
-
 

@@ -1,39 +1,41 @@
+import bcrypt from 'bcryptjs'
+import { eq } from 'drizzle-orm'
 import { db } from './db'
 import * as schema from './schema'
-import bcrypt from 'bcryptjs'
 
 async function main() {
-  console.log('🌱 Seeding MedCore HMS database...')
+  console.log('Seeding MedCore HMS admin account...')
 
-  // Clear existing data
-  await db.delete(schema.prescriptionDrugs)
-  await db.delete(schema.prescriptions)
-  await db.delete(schema.appointments)
-  await db.delete(schema.invoices)
-  await db.delete(schema.drugs)
-  await db.delete(schema.patients)
-  await db.delete(schema.staffInvites)
-  await db.delete(schema.staff)
+  const name = process.env.SEED_ADMIN_NAME
+  const email = process.env.SEED_ADMIN_EMAIL
+  const password = process.env.SEED_ADMIN_PASSWORD
+  const phone = process.env.SEED_ADMIN_PHONE
 
-  // ── Admin only ──
-  const adminHash = await bcrypt.hash('Abdulsobur1.', 10)
+  if (!name || !email || !password) {
+    throw new Error('Set SEED_ADMIN_NAME, SEED_ADMIN_EMAIL, and SEED_ADMIN_PASSWORD before running seed.')
+  }
 
-  const [admin] = await db.insert(schema.staff).values({
-    name: 'Dr. Abdulsobur',
-    email: 'abdullahabdulsobur@gmail.com',
-    passwordHash: adminHash,
+  const existing = await db.select().from(schema.staff).where(eq(schema.staff.email, email)).limit(1)
+  if (existing.length > 0) {
+    console.log(`Admin already exists for ${email}. No changes made.`)
+    return
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10)
+
+  await db.insert(schema.staff).values({
+    name,
+    email,
+    passwordHash,
     role: 'admin',
     department: 'Administration',
-    phone: '+234-800-000-0001',
-  }).returning()
+    phone: phone || null,
+  })
 
-  console.log('✅ Admin user seeded')
-  console.log('')
-  console.log('🎉 MedCore HMS seeding complete!')
-  console.log('')
-  console.log('📋 Admin Credentials:')
-  console.log('   Email: abdullahabdulsobur@gmail.com')
-  console.log('   Password: Abdulsobur1.')
+  console.log(`Admin user created for ${email}.`)
 }
 
-main().catch(console.error)
+main().catch((error) => {
+  console.error(error)
+  process.exit(1)
+})

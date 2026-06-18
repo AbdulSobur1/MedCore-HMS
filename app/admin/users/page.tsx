@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, ShieldCheck, Copy } from 'lucide-react'
+import { Plus, ShieldCheck, Copy, Trash2 } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AppModal } from '@/components/ui/AppModal'
@@ -16,7 +16,10 @@ export default function AdminUsersPage() {
   const [inviteUrl, setInviteUrl] = useState('')
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'doctor', department: '' })
 
-  useEffect(() => { fetchStaff() }, [])
+  useEffect(() => {
+    fetchStaff()
+    fetchInvites()
+  }, [])
 
   const fetchStaff = async () => {
     try {
@@ -24,6 +27,18 @@ export default function AdminUsersPage() {
       if (res.ok) { const d = await res.json(); setStaff(d.staff || []) }
     } catch { toast.error('Failed to load staff') }
     finally { setLoading(false) }
+  }
+
+  const fetchInvites = async () => {
+    try {
+      const res = await fetch('/api/staff/invite')
+      if (res.ok) {
+        const data = await res.json()
+        setInvites(data.invites || [])
+      }
+    } catch {
+      toast.error('Failed to load staff invites')
+    }
   }
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -37,6 +52,7 @@ export default function AdminUsersPage() {
       const d = await res.json()
       if (res.ok) {
         setInviteUrl(d.inviteUrl)
+        fetchInvites()
         toast.success('Invite created! Share the link below.')
       } else {
         toast.error(d.error || 'Failed to create invite')
@@ -44,9 +60,24 @@ export default function AdminUsersPage() {
     } catch { toast.error('Failed to create invite') }
   }
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(inviteUrl)
+  const copyLink = (url = inviteUrl) => {
+    navigator.clipboard.writeText(url)
     toast.success('Link copied!')
+  }
+
+  const revokeInvite = async (id: string) => {
+    if (!window.confirm('Revoke this staff invite?')) return
+    try {
+      const res = await fetch(`/api/staff/invite/revoke/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Invite revoked')
+        fetchInvites()
+      } else {
+        toast.error('Failed to revoke invite')
+      }
+    } catch {
+      toast.error('Failed to revoke invite')
+    }
   }
 
   const toggleActive = async (id: string, isActive: boolean) => {
@@ -109,6 +140,47 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
+      <div className="bg-[--surface] rounded-xl border border-[--border] overflow-hidden">
+        <div className="px-4 py-3 border-b border-[--border]">
+          <h3 className="text-[13px] font-semibold text-[--text-1]">Pending Staff Invites</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-[13px]">
+            <thead className="bg-[--surface-2]">
+              <tr>
+                <th className="text-left py-3 px-4 text-[11px] font-medium uppercase text-[--text-3]">Email</th>
+                <th className="text-left py-3 px-4 text-[11px] font-medium uppercase text-[--text-3]">Role</th>
+                <th className="text-left py-3 px-4 text-[11px] font-medium uppercase text-[--text-3]">Department</th>
+                <th className="text-left py-3 px-4 text-[11px] font-medium uppercase text-[--text-3]">Expires</th>
+                <th className="text-left py-3 px-4 text-[11px] font-medium uppercase text-[--text-3] w-32">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[--border]">
+              {invites.length === 0 ? (
+                <tr><td colSpan={5}><EmptyState icon={ShieldCheck} title="No pending invites" /></td></tr>
+              ) : invites.map((invite: any) => (
+                <tr key={invite.id} className="hover:bg-[--surface-2]">
+                  <td className="py-3 px-4 text-[--text-1]">{invite.email}</td>
+                  <td className="py-3 px-4 capitalize"><StatusBadge status={invite.role} /></td>
+                  <td className="py-3 px-4 text-[--text-2]">{invite.department || 'None'}</td>
+                  <td className="py-3 px-4 text-[--text-2]">{format(new Date(invite.expiresAt), 'dd MMM yyyy, hh:mm a')}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex gap-2">
+                      <button onClick={() => copyLink(invite.inviteUrl)} className="p-2 rounded-lg bg-[--accent] text-white hover:bg-[--accent-hover]" aria-label="Copy invite link">
+                        <Copy className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => revokeInvite(invite.id)} className="p-2 rounded-lg bg-[--danger-soft] text-[--danger] hover:bg-[--danger] hover:text-white" aria-label="Revoke invite">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Invite Modal */}
       {showInvite && (
         <AppModal title="Invite Staff" onClose={() => { setShowInvite(false); setInviteUrl('') }} size="md">
@@ -131,10 +203,10 @@ export default function AdminUsersPage() {
               </form>
             ) : (
               <div className="space-y-3">
-                <p className="text-[13px] text-[--text-2]">Invite created! Share this link with the staff member:</p>
+                <p className="text-[13px] text-[--text-2]">Invite created. Share this secure link with the staff member so they can create their account:</p>
                 <div className="flex items-center gap-2">
                   <input readOnly value={inviteUrl} className="flex-1 px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[12px] text-[--text-1]" />
-                  <button onClick={copyLink} className="p-2 rounded-lg bg-[--accent] text-white hover:bg-[--accent-hover]">
+                  <button onClick={() => copyLink()} className="p-2 rounded-lg bg-[--accent] text-white hover:bg-[--accent-hover]">
                     <Copy className="w-4 h-4" />
                   </button>
                 </div>

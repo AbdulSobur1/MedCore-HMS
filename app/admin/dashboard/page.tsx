@@ -25,12 +25,12 @@ export default async function AdminDashboardPage() {
   const [{ count: pendingInvoices }] = await db.select({ count: sql<number>`count(*)` }).from(invoices)
     .where(eq(invoices.status, 'pending'))
 
-  // Weekly admissions data from real appointments
-  const weeklyAppointments = await db.select({
-    scheduledAt: appointments.scheduledAt,
-    id: appointments.id,
-  }).from(appointments)
-    .where(and(gte(appointments.scheduledAt, weekStart), lte(appointments.scheduledAt, weekEnd)))
+  // Weekly patient activity from real patient records
+  const weeklyPatients = await db.select({
+    createdAt: patients.createdAt,
+    status: patients.status,
+  }).from(patients)
+    .where(and(gte(patients.createdAt, weekStart), lte(patients.createdAt, weekEnd)))
 
   const weeklyData = dayNames.map((day, i) => {
     const dayDate = new Date(weekStart)
@@ -38,15 +38,15 @@ export default async function AdminDashboardPage() {
     const dayEnd = new Date(dayDate)
     dayEnd.setDate(dayEnd.getDate() + 1)
 
-    const dayAppts = weeklyAppointments.filter(a => {
-      const d = new Date(a.scheduledAt)
+    const dayPatients = weeklyPatients.filter(p => {
+      const d = new Date(p.createdAt)
       return d >= dayDate && d < dayEnd
     })
 
     return {
       day,
-      admitted: dayAppts.length,
-      discharged: Math.max(0, Math.floor(dayAppts.length * 0.4)),
+      registered: dayPatients.length,
+      discharged: dayPatients.filter(p => p.status === 'discharged').length,
     }
   })
 

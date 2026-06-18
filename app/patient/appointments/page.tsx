@@ -132,8 +132,17 @@ export default function PatientAppointmentsPage() {
                   <option>Consultation</option><option>Follow-up</option><option>Checkup</option>
                 </select>
               </div>
-              <textarea placeholder="Notes" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" rows={2} />
+              <div>
+                <label className="block text-[11px] font-medium text-[--text-2] mb-1">What seems to be wrong? *</label>
+                <textarea
+                  placeholder="Describe your symptoms, how long it has been happening, pain level, or any concern you want the doctor to know."
+                  value={form.notes}
+                  onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]"
+                  rows={4}
+                  required
+                />
+              </div>
               <button type="submit" className="w-full py-2 bg-[--accent] text-white rounded-lg text-[13px] font-medium hover:bg-[--accent-hover]">Request Appointment</button>
             </form>
         </AppModal>

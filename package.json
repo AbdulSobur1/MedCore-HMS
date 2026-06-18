@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "seed": "npx tsx lib/seed.ts"
+    "seed": "npx tsx lib/seed.ts",
+    "purge:demo": "tsx scripts/remove-demo-data.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

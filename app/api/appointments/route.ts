@@ -78,6 +78,10 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
+    if (session.role === 'patient' && !String(body.notes || '').trim()) {
+      return NextResponse.json({ error: 'Please describe what seems to be wrong before booking.' }, { status: 400 })
+    }
+
     const [appt] = await db.insert(appointments).values({
       patientId: body.patientId || (session.role === 'patient' ? session.id : null),
       doctorId: body.doctorId,
