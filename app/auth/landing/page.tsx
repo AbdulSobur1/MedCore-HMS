@@ -7,15 +7,15 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b border-border sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+      <header className="border-b border-border sticky top-0 z-10 min-h-[64px] overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between h-full">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#0D7A6B] flex items-center justify-center flex-shrink-0">
               <Stethoscope className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">MedCore</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Hospital Management System</p>
+            <div className="flex flex-col leading-tight">
+              <span className="text-[16px] font-semibold text-foreground">MedCore</span>
+              <span className="text-[11px] text-muted-foreground hidden sm:block">Hospital Management System</span>
             </div>
           </div>
           <Link
@@ -28,7 +28,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-20">
+      <section className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-20 mt-[64px]">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Column */}
           <div className="space-y-8">
