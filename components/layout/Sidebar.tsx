@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LogOut, X } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
 interface NavItem {
@@ -27,27 +28,39 @@ export function Sidebar({ navItems, open, onClose }: SidebarProps) {
     router.push('/auth/login')
   }
 
+  // Lock body scroll when sidebar opens on mobile
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
   const initials = session?.name
     ? session.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : '?'
 
   return (
     <>
-      {/* Mobile backdrop */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
-          onClick={onClose}
-        />
-      )}
+      {/* Mobile backdrop — always rendered for smooth fade transition */}
+      <div
+        className={`fixed inset-0 z-30 lg:hidden transition-all duration-300 ${
+          open
+            ? 'bg-black/40 backdrop-blur-sm opacity-100'
+            : 'bg-black/0 backdrop-blur-none opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+      />
 
-      {/* Sidebar — always fixed, content area uses lg:pl-[220px] to clear it */}
+      {/* Sidebar — always fixed, content area uses lg:ml-[220px] to clear it */}
       <aside
         className={`fixed left-0 top-0 h-screen w-[220px] z-40
           bg-[--surface] border-r border-[--border] flex flex-col
-          transition-transform duration-300
-          ${open ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0`}
+          transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
+          ${open ? 'translate-x-0 shadow-2xl shadow-black/20' : '-translate-x-full shadow-none'}
+          lg:translate-x-0 lg:shadow-none`}
       >
         {/* Logo */}
         <div className="h-14 border-b border-[--border] px-4 flex items-center gap-2.5 shrink-0">
@@ -57,6 +70,13 @@ export function Sidebar({ navItems, open, onClose }: SidebarProps) {
             </svg>
           </div>
           <span className="font-semibold text-[--text-1] text-sm">MedCore</span>
+          <button
+            onClick={onClose}
+            className="ml-auto lg:hidden p-1.5 rounded-lg hover:bg-[--surface-2] transition-colors text-[--text-3] hover:text-[--text-1]"
+            aria-label="Close sidebar"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Nav items */}
