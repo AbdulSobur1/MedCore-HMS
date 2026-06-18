@@ -46,9 +46,9 @@ export function Sidebar({ navItems, open, onClose }: SidebarProps) {
     <>
       {/* Mobile backdrop — always rendered for smooth fade transition */}
       <div
-        className={`fixed inset-0 z-30 lg:hidden transition-all duration-300 ${
+        className={`fixed inset-0 z-40 lg:hidden transition-all duration-300 ${
           open
-            ? 'bg-black/40 backdrop-blur-sm opacity-100'
+            ? 'bg-black/50 opacity-100'
             : 'bg-black/0 backdrop-blur-none opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
@@ -56,11 +56,12 @@ export function Sidebar({ navItems, open, onClose }: SidebarProps) {
 
       {/* Sidebar — always fixed, content area uses lg:ml-[220px] to clear it */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-[220px] z-40
-          bg-[--surface] border-r border-[--border] flex flex-col
+        className={`fixed left-0 top-0 z-50 flex h-screen w-[220px] max-w-[82vw] flex-col
+          border-r border-[--border] bg-[--surface]
           transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
           ${open ? 'translate-x-0 shadow-2xl shadow-black/20' : '-translate-x-full shadow-none'}
           lg:translate-x-0 lg:shadow-none`}
+        style={{ backgroundColor: 'var(--surface)' }}
       >
         {/* Logo */}
         <div className="h-14 border-b border-[--border] px-4 flex items-center gap-2.5 shrink-0">

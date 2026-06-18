@@ -92,7 +92,7 @@ export default function AdminAppointmentsPage() {
       {/* Table */}
       <div className="bg-[--surface] rounded-xl border border-[--border] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
+          <table className="w-full min-w-[680px] text-[13px]">
             <thead className="bg-[--surface-2]">
               <tr>
                 <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking text-[--text-3]">Date & Time</th>

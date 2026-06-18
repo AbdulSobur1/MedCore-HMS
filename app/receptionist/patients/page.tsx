@@ -48,7 +48,7 @@ export default function ReceptionistPatientsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[--text-1]">Patients</h1>
           <p className="text-[13px] text-[--text-3]">View and register patients</p>
@@ -67,7 +67,7 @@ export default function ReceptionistPatientsPage() {
 
       <div className="bg-[--surface] rounded-xl border border-[--border] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
+          <table className="w-full min-w-[620px] text-[13px]">
             <thead className="bg-[--surface-2]">
               <tr>
                 <th className="text-left py-3 px-4 text-[11px] font-medium uppercase text-[--text-3]">Code</th>

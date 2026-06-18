@@ -50,7 +50,7 @@ export default function AdminPatientsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[--text-1]">Patients</h1>
           <p className="text-[13px] text-[--text-3]">Manage all patient records</p>
@@ -71,7 +71,7 @@ export default function AdminPatientsPage() {
       {/* Table */}
       <div className="bg-[--surface] rounded-xl border border-[--border] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
+          <table className="w-full min-w-[640px] text-[13px]">
             <thead className="bg-[--surface-2]">
               <tr>
                 <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking text-[--text-3]">Code</th>
@@ -114,7 +114,10 @@ export default function AdminPatientsPage() {
       {selected && (
         <div className="fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/30" onClick={() => setSelected(null)} />
-          <div className="relative ml-auto w-[480px] max-w-full bg-[--surface] border-l border-[--border] h-full overflow-y-auto">
+          <div
+            className="relative z-10 ml-auto h-full w-full overflow-y-auto border-l border-[--border] bg-[--surface] shadow-2xl sm:w-[480px]"
+            style={{ backgroundColor: 'var(--surface)' }}
+          >
             <div className="flex items-center justify-between p-5 border-b border-[--border]">
               <h2 className="text-[15px] font-semibold text-[--text-1]">{selected.firstName} {selected.lastName}</h2>
               <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg hover:bg-[--surface-2]"><X className="w-4 h-4" /></button>
@@ -168,7 +171,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div>
       <h3 className="text-[11px] font-semibold uppercase tracking text-[--text-3] mb-2">{title}</h3>
-      <div className="grid grid-cols-2 gap-3">{children}</div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
     </div>
   )
 }

@@ -110,7 +110,7 @@ export default function AdminBillingPage() {
 
       <div className="bg-[--surface] rounded-xl border border-[--border] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
+          <table className="w-full min-w-[720px] text-[13px]">
             <thead className="bg-[--surface-2]">
               <tr>
                 <th className="text-left py-3 px-4 text-[11px] font-medium uppercase text-[--text-3]">Invoice</th>

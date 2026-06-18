@@ -29,7 +29,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
       <Sidebar navItems={navItems} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 min-h-screen lg:ml-[220px]">
         <Topbar title={`Dr. ${session.name}`} onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
       </div>
     </div>
   )
