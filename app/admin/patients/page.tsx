@@ -112,7 +112,7 @@ export default function AdminPatientsPage() {
       {/* Detail Drawer */}
       {selected && (
         <div className="fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black/30" onClick={() => setSelected(null)} />
+          <div className="fixed inset-0 lg:left-[220px] bg-black/30" onClick={() => setSelected(null)} />
           <div className="relative ml-auto w-[480px] max-w-full bg-[--surface] border-l border-[--border] h-full overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-[--border]">
               <h2 className="text-[15px] font-semibold text-[--text-1]">{selected.firstName} {selected.lastName}</h2>

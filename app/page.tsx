@@ -4,15 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { Loader } from 'lucide-react'
-
-const ROLE_HOME: Record<string, string> = {
-  admin:        '/admin/dashboard',
-  doctor:       '/doctor/dashboard',
-  receptionist: '/receptionist/dashboard',
-  pharmacist:   '/pharmacist/dashboard',
-  accountant:   '/accountant/dashboard',
-  patient:      '/patient/dashboard',
-}
+import { ROLE_HOME } from '@/lib/auth'
 
 export default function Home() {
   const router = useRouter()

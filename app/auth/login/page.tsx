@@ -57,7 +57,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[--bg] flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4"
+         style={{background: 'linear-gradient(135deg, #f0fdfa 0%, #e6f4f2 40%, #eff8ff 100%)'}}>
       <div className="w-full max-w-md">
         <Link href="/auth/landing" className="flex items-center gap-1.5 text-sm text-[--text-2] hover:text-[--text-1] mb-6 transition-colors">
           ← Back to home
@@ -71,7 +72,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-[--surface] rounded-2xl border border-[--border] p-8">
+        <div className="glass rounded-2xl p-8">
           <div className="space-y-1 mb-8">
             <h1 className="text-2xl font-semibold text-[--text-1]">Welcome back</h1>
             <p className="text-sm text-[--text-3]">Sign in to your account.</p>

@@ -1,15 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifySessionToken } from '@/lib/auth'
-
-const ROLE_HOME: Record<string, string> = {
-  admin:        '/admin/dashboard',
-  doctor:       '/doctor/dashboard',
-  receptionist: '/receptionist/dashboard',
-  pharmacist:   '/pharmacist/dashboard',
-  accountant:   '/accountant/dashboard',
-  patient:      '/patient/dashboard',
-}
+import { verifySessionToken, ROLE_HOME } from '@/lib/auth'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

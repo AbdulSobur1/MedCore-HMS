@@ -5,7 +5,8 @@ import { ArrowRight, Users, Calendar, Pill, BarChart3, Lock, ClipboardList, Stet
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col"
+         style={{background: 'linear-gradient(135deg, #f0fdfa 0%, #e6f4f2 40%, #eff8ff 100%)'}}>
       {/* Header */}
       <header className="border-b border-border sticky top-0 z-10 min-h-[64px] overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between h-full">
@@ -33,9 +34,9 @@ export default function LandingPage() {
           {/* Left Column */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <h2 className="text-4xl sm:text-5xl font-light tracking-tight text-foreground">
+              <h1 className="text-4xl sm:text-5xl font-light tracking-tight text-foreground">
                 Hospital Management Reimagined
-              </h2>
+              </h1>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
                 A comprehensive platform designed to streamline patient care, coordinate staff operations, and optimize hospital workflows. From appointment scheduling to pharmacy management, everything your hospital needs.
               </p>

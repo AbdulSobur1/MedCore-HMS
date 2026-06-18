@@ -139,12 +139,13 @@ export default function RegisterPage() {
 
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-[--bg] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4"
+           style={{background: 'linear-gradient(135deg, #f0fdfa 0%, #e6f4f2 40%, #eff8ff 100%)'}}>
         <div className="w-full max-w-md">
           <Link href="/auth/landing" className="flex items-center gap-1.5 text-sm text-[--text-2] hover:text-[--text-1] mb-6 transition-colors">
             ← Back to home
           </Link>
-          <div className="bg-[--surface] rounded-2xl border border-[--border] p-8 text-center">
+          <div className="glass rounded-2xl p-8 text-center">
             <div className="w-14 h-14 mx-auto rounded-full bg-[--success-soft] flex items-center justify-center mb-6">
               <CheckCircle className="w-7 h-7 text-[--success]" />
             </div>
@@ -165,7 +166,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[--bg] flex flex-col items-center justify-center p-4 py-8">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 py-8"
+         style={{background: 'linear-gradient(135deg, #f0fdfa 0%, #e6f4f2 40%, #eff8ff 100%)'}}>
       <div className="w-full max-w-lg">
         <Link href="/auth/landing" className="flex items-center gap-1.5 text-sm text-[--text-2] hover:text-[--text-1] mb-6 transition-colors">
           ← Back to home
@@ -179,7 +181,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-[--surface] rounded-2xl border border-[--border] p-8">
+        <div className="glass rounded-2xl p-8">
           <div className="space-y-1 mb-6">
             <h1 className="text-2xl font-semibold text-[--text-1]">Create your patient account</h1>
             <p className="text-sm text-[--text-3]">Fill in your details to get started.</p>

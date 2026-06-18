@@ -44,7 +44,8 @@ export default function DoctorSchedulePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="overflow-x-auto -mx-1 px-1">
+        <div className="grid grid-cols-7 gap-2 min-w-[560px]">
         {weekDays.map((day, i) => {
           const dayAppts = getApptsForDay(day)
           const isToday = day.getDate() === new Date().getDate() && day.getMonth() === new Date().getMonth() && day.getFullYear() === new Date().getFullYear()
@@ -71,6 +72,7 @@ export default function DoctorSchedulePage() {
             </div>
           )
         })}
+        </div>
       </div>
     </div>
   )

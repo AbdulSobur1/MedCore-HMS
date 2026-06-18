@@ -1,7 +1,8 @@
 'use client'
 
 import { format } from 'date-fns'
-import { Users, Calendar, ShieldCheck, CreditCard, Eye } from 'lucide-react'
+import { Users, Calendar, ShieldCheck, CreditCard } from 'lucide-react'
+import { StatCard } from '@/components/ui/StatCard'
 import { AdminCharts } from '@/components/charts/AdminCharts'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import Link from 'next/link'
@@ -100,25 +101,4 @@ export function AdminDashboardClient({
   )
 }
 
-function StatCard({ icon: Icon, label, value, delta, color }: {
-  icon: any; label: string; value: string; delta: string; color: string
-}) {
-  const colorMap: Record<string, string> = {
-    accent: 'bg-[--accent-soft] text-[--accent]',
-    info: 'bg-[--info-soft] text-[--info]',
-    success: 'bg-[--success-soft] text-[--success]',
-    warning: 'bg-[--warning-soft] text-[--warning]',
-  }
-  return (
-    <div className="bg-[--surface] rounded-xl border border-[--border] p-5 flex items-start justify-between">
-      <div>
-        <p className="text-[11px] uppercase tracking text-[--text-3] mb-1">{label}</p>
-        <p className="text-[28px] font-semibold text-[--text-1] leading-none mb-1">{value}</p>
-        <p className="text-[12px] text-[--text-3]">{delta}</p>
-      </div>
-      <div className={`w-9 h-9 rounded-lg ${colorMap[color] || colorMap.accent} flex items-center justify-center shrink-0`}>
-        <Icon className="w-4 h-4" />
-      </div>
-    </div>
-  )
-}
+

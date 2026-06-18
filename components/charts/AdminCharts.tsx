@@ -1,7 +1,5 @@
 'use client'
 
-'use client'
-
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 interface AdminChartsProps {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { Users, Calendar, FileText, Clock } from 'lucide-react'
+import { StatCard } from '@/components/ui/StatCard'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { toast } from 'sonner'
@@ -92,15 +93,4 @@ export default function DoctorDashboardPage() {
   )
 }
 
-function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: string; color: string }) {
-  const colors: Record<string, string> = { accent: 'bg-[--accent-soft] text-[--accent]', info: 'bg-[--info-soft] text-[--info]', warning: 'bg-[--warning-soft] text-[--warning]', success: 'bg-[--success-soft] text-[--success]' }
-  return (
-    <div className="bg-[--surface] border border-[--border] rounded-xl p-5 flex items-start justify-between">
-      <div>
-        <p className="text-[11px] uppercase text-[--text-3] mb-1">{label}</p>
-        <p className="text-[28px] font-semibold text-[--text-1]">{value}</p>
-      </div>
-      <div className={`w-9 h-9 rounded-lg ${colors[color]} flex items-center justify-center shrink-0`}><Icon className="w-4 h-4" /></div>
-    </div>
-  )
-}
+
