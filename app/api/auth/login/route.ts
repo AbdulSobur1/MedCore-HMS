@@ -4,6 +4,10 @@ import { db } from '@/lib/db'
 import { staff, patients } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { createSessionToken, ROLE_HOME } from '@/lib/auth'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { requestFingerprint } from '@/lib/api-utils'
+
+const INVALID_LOGIN = 'Invalid email or password.'
 
 export async function POST(request: Request) {
   try {
@@ -13,13 +17,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
+    const key = `login:${await requestFingerprint()}:${String(email).toLowerCase()}`
+    if (!checkRateLimit(key, 5, 15 * 60 * 1000)) {
+      return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 })
+    }
+
     // 1. Look up in staff table first
     const staffResult = await db.select().from(staff).where(eq(staff.email, email)).limit(1)
     if (staffResult.length > 0) {
       const s = staffResult[0]
       const valid = await bcrypt.compare(password, s.passwordHash)
       if (!valid) {
-        return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 })
+        return NextResponse.json({ error: INVALID_LOGIN }, { status: 401 })
       }
 
       // Update lastLogin
@@ -52,7 +61,7 @@ export async function POST(request: Request) {
       const p = patientResult[0]
       const valid = await bcrypt.compare(password, p.passwordHash)
       if (!valid) {
-        return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 })
+        return NextResponse.json({ error: INVALID_LOGIN }, { status: 401 })
       }
 
       const token = await createSessionToken({
@@ -75,7 +84,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Not found
-    return NextResponse.json({ error: 'No account found with this email.' }, { status: 404 })
+    return NextResponse.json({ error: INVALID_LOGIN }, { status: 401 })
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })

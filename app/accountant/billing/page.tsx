@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, CreditCard } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { AppModal } from '@/components/ui/AppModal'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
@@ -11,13 +12,17 @@ function f(n: number) { return '₦' + n.toLocaleString('en-NG', { minimumFracti
 
 export default function AccountantBillingPage() {
   const [invoices, setInvoices] = useState<any[]>([])
+  const [patients, setPatients] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [showNew, setShowNew] = useState(false)
   const [filterStatus, setFilterStatus] = useState('all')
   const [form, setForm] = useState({ patientId: '', service: '', amount: 0, paymentMethod: '' })
 
-  useEffect(() => { fetchInvoices() }, [])
+  useEffect(() => {
+    fetchInvoices()
+    fetchPatients()
+  }, [])
 
   const fetchInvoices = async () => {
     try {
@@ -25,6 +30,18 @@ export default function AccountantBillingPage() {
       if (res.ok) { const d = await res.json(); setInvoices(d.invoices || []) }
     } catch { toast.error('Failed to load invoices') }
     finally { setLoading(false) }
+  }
+
+  const fetchPatients = async () => {
+    try {
+      const res = await fetch('/api/patients')
+      if (res.ok) {
+        const data = await res.json()
+        setPatients(data.patients || [])
+      }
+    } catch {
+      toast.error('Failed to load patients')
+    }
   }
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -41,6 +58,7 @@ export default function AccountantBillingPage() {
   }
 
   const handleMarkPaid = async (id: string) => {
+    if (!window.confirm('Mark this invoice as paid?')) return
     try {
       const res = await fetch(`/api/invoices/${id}`, {
         method: 'PATCH',
@@ -135,21 +153,24 @@ export default function AccountantBillingPage() {
       </div>
 
       {showNew && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:left-[220px]">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setShowNew(false)} />
-          <div className="relative bg-[--surface] rounded-xl border border-[--border] p-6 w-full max-w-md">
-            <h2 className="text-[15px] font-semibold text-[--text-1] mb-4">New Invoice</h2>
+        <AppModal title="New Invoice" onClose={() => setShowNew(false)} size="md">
             <form onSubmit={handleCreate} className="space-y-3">
-              <input placeholder="Patient ID *" value={form.patientId} onChange={e => setForm(f => ({ ...f, patientId: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" required />
+              <select value={form.patientId} onChange={e => setForm(f => ({ ...f, patientId: e.target.value }))}
+                className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" required>
+                <option value="">Select patient</option>
+                {patients.map((patient: any) => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.patientCode} - {patient.firstName} {patient.lastName}
+                  </option>
+                ))}
+              </select>
               <input placeholder="Service *" value={form.service} onChange={e => setForm(f => ({ ...f, service: e.target.value }))}
                 className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" required />
               <input type="number" placeholder="Amount (kobo) *" value={form.amount || ''} onChange={e => setForm(f => ({ ...f, amount: parseInt(e.target.value) || 0 }))}
                 className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px]" required />
               <button type="submit" className="w-full py-2 bg-[--accent] text-white rounded-lg text-[13px] font-medium hover:bg-[--accent-hover]">Create Invoice</button>
             </form>
-          </div>
-        </div>
+        </AppModal>
       )}
     </div>
   )

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Search, Plus, TrendingDown } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { AppModal } from '@/components/ui/AppModal'
 import { Pill } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -30,6 +31,7 @@ export default function AdminPharmacyPage() {
   }
 
   const handleDispense = async (id: string) => {
+    if (!window.confirm('Mark this prescription as dispensed?')) return
     try {
       const res = await fetch(`/api/prescriptions/${id}`, {
         method: 'PATCH',
@@ -59,16 +61,16 @@ export default function AdminPharmacyPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div><h1 className="text-xl font-semibold text-[--text-1]">Pharmacy</h1><p className="text-[13px] text-[--text-3]">Prescriptions & inventory management</p></div>
         <button onClick={() => setShowDrug(true)} className="flex items-center gap-1.5 px-3 py-2 bg-[--accent] text-white rounded-lg text-[13px] font-medium hover:bg-[--accent-hover]">
           <Plus className="w-4 h-4" /> Add Drug
         </button>
       </div>
 
-      <div className="flex gap-1 border-b border-[--border]">
-        <button onClick={() => setTab('prescriptions')} className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${tab === 'prescriptions' ? 'border-[--accent] text-[--accent]' : 'border-transparent text-[--text-3]'}`}>Prescriptions</button>
-        <button onClick={() => setTab('inventory')} className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${tab === 'inventory' ? 'border-[--accent] text-[--accent]' : 'border-transparent text-[--text-3]'}`}>Drug Inventory</button>
+      <div className="flex gap-1 overflow-x-auto border-b border-[--border]">
+        <button onClick={() => setTab('prescriptions')} className={`shrink-0 px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${tab === 'prescriptions' ? 'border-[--accent] text-[--accent]' : 'border-transparent text-[--text-3]'}`}>Prescriptions</button>
+        <button onClick={() => setTab('inventory')} className={`shrink-0 px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${tab === 'inventory' ? 'border-[--accent] text-[--accent]' : 'border-transparent text-[--text-3]'}`}>Drug Inventory</button>
       </div>
 
       <div className="relative max-w-sm">
@@ -134,14 +136,11 @@ export default function AdminPharmacyPage() {
       )}
 
       {showDrug && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:left-[220px]">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setShowDrug(false)} />
-          <div className="relative bg-[--surface] rounded-xl border border-[--border] p-6 w-full max-w-md">
-            <h2 className="text-[15px] font-semibold text-[--text-1] mb-4">Add Drug</h2>
+        <AppModal title="Add Drug" onClose={() => setShowDrug(false)} size="md">
             <form onSubmit={handleAddDrug} className="space-y-3">
               <input placeholder="Drug Name *" value={drugForm.name} onChange={e => setDrugForm(f => ({ ...f, name: e.target.value }))}
                 className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" required />
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input type="number" placeholder="Qty" value={drugForm.quantity || ''} onChange={e => setDrugForm(f => ({ ...f, quantity: parseInt(e.target.value) || 0 }))}
                   className="px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px]" />
                 <select value={drugForm.unit} onChange={e => setDrugForm(f => ({ ...f, unit: e.target.value }))}
@@ -153,8 +152,7 @@ export default function AdminPharmacyPage() {
               </div>
               <button type="submit" className="w-full py-2 bg-[--accent] text-white rounded-lg text-[13px] font-medium hover:bg-[--accent-hover]">Add Drug</button>
             </form>
-          </div>
-        </div>
+        </AppModal>
       )}
     </div>
   )

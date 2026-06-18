@@ -2,26 +2,29 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { invoices } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { verifySessionToken } from '@/lib/auth'
+import { getSession, jsonError, pickDefined, requireRoles } from '@/lib/api-utils'
+
+const INVOICE_STATUSES = ['paid', 'pending', 'overdue', 'processing'] as const
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cookieHeader = await import('next/headers').then(m => m.cookies())
-    const token = cookieHeader.get('session')?.value
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const session = await verifySessionToken(token)
-    if (!session || (session.role !== 'admin' && session.role !== 'accountant')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const session = await getSession()
+    if (!session) return jsonError('Unauthorized', 401)
+    if (!requireRoles(session, ['admin', 'accountant'])) return jsonError('Forbidden', 403)
 
     const { id } = await params
     const body = await request.json()
+    const updates = pickDefined(body, ['service', 'amount', 'paymentMethod', 'status'] as const)
 
-    await db.update(invoices).set(body).where(eq(invoices.id, id))
+    if (updates.status && !INVOICE_STATUSES.includes(updates.status as typeof INVOICE_STATUSES[number])) {
+      return jsonError('Invalid invoice status', 400)
+    }
+    if (Object.keys(updates).length === 0) return jsonError('No valid fields to update', 400)
+
+    await db.update(invoices).set(updates).where(eq(invoices.id, id))
 
     return NextResponse.json({ success: true })
   } catch (error) {

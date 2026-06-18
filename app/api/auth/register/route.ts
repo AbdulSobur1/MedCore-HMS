@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import { patients } from '@/lib/schema'
-import { eq, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { createPatientCode } from '@/lib/codes'
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -33,10 +34,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Generate patient code
-    const countResult = await db.select({ count: sql<number>`count(*)` }).from(patients)
-    const count = Number(countResult[0]?.count || 0)
-    const patientCode = `PT-${String(count + 1).padStart(4, '0')}`
+    const patientCode = createPatientCode()
 
     // Hash password
     const passwordHash = await bcrypt.hash(data.password, 10)

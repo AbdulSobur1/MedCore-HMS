@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Plus, Calendar } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { AppModal } from '@/components/ui/AppModal'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
@@ -13,12 +14,16 @@ const TABS = ['Upcoming', 'Past', 'Cancelled']
 export default function PatientAppointmentsPage() {
   const { session } = useAuth()
   const [appts, setAppts] = useState<any[]>([])
+  const [doctors, setDoctors] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('Upcoming')
   const [showBook, setShowBook] = useState(false)
   const [form, setForm] = useState({ doctorId: '', type: 'Consultation', scheduledAt: '', notes: '' })
 
-  useEffect(() => { fetchAppts() }, [session])
+  useEffect(() => {
+    fetchAppts()
+    fetchDoctors()
+  }, [session])
 
   const fetchAppts = async () => {
     try {
@@ -26,6 +31,18 @@ export default function PatientAppointmentsPage() {
       if (res.ok) { const d = await res.json(); setAppts(d.appointments || []) }
     } catch { toast.error('Failed to load') }
     finally { setLoading(false) }
+  }
+
+  const fetchDoctors = async () => {
+    try {
+      const res = await fetch('/api/doctors')
+      if (res.ok) {
+        const data = await res.json()
+        setDoctors((data.doctors || []).filter((doctor: any) => doctor.isActive !== false))
+      }
+    } catch {
+      toast.error('Failed to load doctors')
+    }
   }
 
   const handleBook = async (e: React.FormEvent) => {
@@ -54,17 +71,17 @@ export default function PatientAppointmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div><h1 className="text-xl font-semibold text-[--text-1]">My Appointments</h1></div>
         <button onClick={() => setShowBook(true)} className="flex items-center gap-1.5 px-3 py-2 bg-[--accent] text-white rounded-lg text-[13px] font-medium hover:bg-[--accent-hover]">
           <Plus className="w-4 h-4" /> Book Appointment
         </button>
       </div>
 
-      <div className="flex gap-1 border-b border-[--border]">
+      <div className="flex gap-1 overflow-x-auto border-b border-[--border]">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${tab === t ? 'border-[--accent] text-[--accent]' : 'border-transparent text-[--text-3]'}`}>{t}</button>
+            className={`shrink-0 px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${tab === t ? 'border-[--accent] text-[--accent]' : 'border-transparent text-[--text-3]'}`}>{t}</button>
         ))}
       </div>
 
@@ -96,14 +113,18 @@ export default function PatientAppointmentsPage() {
       </div>
 
       {showBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:left-[220px]">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setShowBook(false)} />
-          <div className="relative bg-[--surface] rounded-xl border border-[--border] p-6 w-full max-w-md">
-            <h2 className="text-[15px] font-semibold text-[--text-1] mb-4">Book Appointment</h2>
+        <AppModal title="Book Appointment" onClose={() => setShowBook(false)} size="md">
             <form onSubmit={handleBook} className="space-y-3">
-              <input placeholder="Doctor ID" value={form.doctorId} onChange={e => setForm(f => ({ ...f, doctorId: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" required />
-              <div className="grid grid-cols-2 gap-3">
+              <select value={form.doctorId} onChange={e => setForm(f => ({ ...f, doctorId: e.target.value }))}
+                className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" required>
+                <option value="">Select doctor</option>
+                {doctors.map((doctor: any) => (
+                  <option key={doctor.id} value={doctor.id}>
+                    Dr. {doctor.name}{doctor.department ? ` - ${doctor.department}` : ''}
+                  </option>
+                ))}
+              </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input type="datetime-local" value={form.scheduledAt} onChange={e => setForm(f => ({ ...f, scheduledAt: e.target.value }))}
                   className="px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" required />
                 <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
@@ -115,8 +136,7 @@ export default function PatientAppointmentsPage() {
                 className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" rows={2} />
               <button type="submit" className="w-full py-2 bg-[--accent] text-white rounded-lg text-[13px] font-medium hover:bg-[--accent-hover]">Request Appointment</button>
             </form>
-          </div>
-        </div>
+        </AppModal>
       )}
     </div>
   )

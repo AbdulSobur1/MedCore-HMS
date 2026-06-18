@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { patients, staff } from '@/lib/schema'
-import { eq, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { verifySessionToken } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
+import { createPatientCode } from '@/lib/codes'
 
 export async function GET() {
   try {
@@ -12,7 +13,7 @@ export async function GET() {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const session = await verifySessionToken(token)
-    if (!session || (session.role !== 'admin' && session.role !== 'doctor' && session.role !== 'receptionist')) {
+    if (!session || (session.role !== 'admin' && session.role !== 'doctor' && session.role !== 'receptionist' && session.role !== 'accountant')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -55,10 +56,7 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
-    // Generate patient code
-    const countResult = await db.select({ count: sql<number>`count(*)` }).from(patients)
-    const count = Number(countResult[0]?.count || 0)
-    const patientCode = `PT-${String(count + 1).padStart(4, '0')}`
+    const patientCode = createPatientCode()
 
     // Temp password = patientCode
     const passwordHash = await bcrypt.hash(patientCode, 10)

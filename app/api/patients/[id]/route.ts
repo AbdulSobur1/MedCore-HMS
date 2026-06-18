@@ -2,19 +2,17 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { patients, staff } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { verifySessionToken } from '@/lib/auth'
+import { getSession, jsonError, pickDefined } from '@/lib/api-utils'
+
+const PATIENT_STATUSES = ['admitted', 'outpatient', 'critical', 'discharged'] as const
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cookieHeader = await import('next/headers').then(m => m.cookies())
-    const token = cookieHeader.get('session')?.value
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const session = await verifySessionToken(token)
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getSession()
+    if (!session) return jsonError('Unauthorized', 401)
 
     const { id } = await params
 
@@ -47,7 +45,7 @@ export async function GET(
 
     // Patients can only view their own record
     if (session.role === 'patient' && session.id !== id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return jsonError('Forbidden', 403)
     }
 
     return NextResponse.json({ patient: result[0] })
@@ -62,32 +60,33 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cookieHeader = await import('next/headers').then(m => m.cookies())
-    const token = cookieHeader.get('session')?.value
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const session = await verifySessionToken(token)
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getSession()
+    if (!session) return jsonError('Unauthorized', 401)
 
     const { id } = await params
 
     // Only admin or the patient themselves can update
     if (session.role !== 'admin' && session.id !== id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return jsonError('Forbidden', 403)
     }
 
     const body = await request.json()
 
     // Patients can only update limited fields
     if (session.role === 'patient') {
-      const allowed = ['phone', 'address', 'emergencyContact']
-      const filtered: Record<string, any> = {}
-      for (const key of allowed) {
-        if (body[key] !== undefined) filtered[key] = body[key]
-      }
+      const filtered = pickDefined(body, ['phone', 'address', 'emergencyContact'] as const)
+      if (Object.keys(filtered).length === 0) return jsonError('No valid fields to update', 400)
       await db.update(patients).set(filtered).where(eq(patients.id, id))
     } else {
-      await db.update(patients).set(body).where(eq(patients.id, id))
+      const filtered = pickDefined(body, [
+        'firstName', 'lastName', 'email', 'phone', 'dob', 'gender', 'bloodType',
+        'address', 'emergencyContact', 'insurance', 'status', 'ward', 'assignedDoctorId',
+      ] as const)
+      if (filtered.status && !PATIENT_STATUSES.includes(filtered.status as typeof PATIENT_STATUSES[number])) {
+        return jsonError('Invalid patient status', 400)
+      }
+      if (Object.keys(filtered).length === 0) return jsonError('No valid fields to update', 400)
+      await db.update(patients).set(filtered).where(eq(patients.id, id))
     }
 
     return NextResponse.json({ success: true })

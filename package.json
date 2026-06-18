@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "seed": "npx tsx lib/seed.ts"
   },
   "dependencies": {

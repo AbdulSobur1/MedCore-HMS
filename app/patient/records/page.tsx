@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { Edit, FileText, User } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { AppModal } from '@/components/ui/AppModal'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
@@ -70,10 +71,7 @@ export default function PatientRecordsPage() {
       </div>
 
       {showEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:left-[220px]">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setShowEdit(false)} />
-          <div className="relative bg-[--surface] rounded-xl border border-[--border] p-6 w-full max-w-md">
-            <h2 className="text-[15px] font-semibold text-[--text-1] mb-4">Edit Profile</h2>
+        <AppModal title="Edit Profile" onClose={() => setShowEdit(false)} size="md">
             <form onSubmit={handleSave} className="space-y-3">
               <div>
                 <label className="block text-[11px] font-medium text-[--text-2] mb-1">Phone</label>
@@ -92,8 +90,7 @@ export default function PatientRecordsPage() {
               </div>
               <button type="submit" className="w-full py-2 bg-[--accent] text-white rounded-lg text-[13px] font-medium hover:bg-[--accent-hover]">Save Changes</button>
             </form>
-          </div>
-        </div>
+        </AppModal>
       )}
     </div>
   )

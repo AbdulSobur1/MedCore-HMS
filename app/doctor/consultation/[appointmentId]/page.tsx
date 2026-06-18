@@ -37,6 +37,7 @@ export default function ConsultationPage({ params }: { params: Promise<{ appoint
 
   const handleSendToPharmacy = async () => {
     if (!diagnosis) { toast.error('Please enter a diagnosis'); return }
+    if (!window.confirm('Send this prescription to pharmacy?')) return
     setSubmitting(true)
     try {
       const res = await fetch('/api/prescriptions', {
@@ -142,6 +143,7 @@ export default function ConsultationPage({ params }: { params: Promise<{ appoint
                 <Send className="w-4 h-4" /> Send to Pharmacy
               </button>
               <button onClick={async () => {
+                if (!window.confirm('Complete this consultation without sending a prescription?')) return
                 try {
                   await fetch(`/api/appointments/${apptId}`, {
                     method: 'PATCH',

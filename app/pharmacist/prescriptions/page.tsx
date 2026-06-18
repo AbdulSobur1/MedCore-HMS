@@ -26,6 +26,7 @@ export default function PharmacistPrescriptionsPage() {
   }
 
   const handleDispense = async (id: string) => {
+    if (!window.confirm('Mark this prescription as dispensed?')) return
     try {
       const res = await fetch(`/api/prescriptions/${id}`, {
         method: 'PATCH',
@@ -47,7 +48,7 @@ export default function PharmacistPrescriptionsPage() {
     <div className="space-y-6">
       <div><h1 className="text-xl font-semibold text-[--text-1]">Prescriptions</h1><p className="text-[13px] text-[--text-3]">Manage and dispense prescriptions</p></div>
 
-      <div className="flex gap-1 border-b border-[--border]">
+      <div className="flex gap-1 overflow-x-auto border-b border-[--border]">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${tab === t ? 'border-[--accent] text-[--accent]' : 'border-transparent text-[--text-3]'}`}>{t}</button>

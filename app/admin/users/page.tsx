@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, ShieldCheck, Copy, X } from 'lucide-react'
+import { Plus, ShieldCheck, Copy } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { AppModal } from '@/components/ui/AppModal'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
@@ -49,6 +50,7 @@ export default function AdminUsersPage() {
   }
 
   const toggleActive = async (id: string, isActive: boolean) => {
+    if (!window.confirm(`${isActive ? 'Disable' : 'Enable'} this staff account?`)) return
     try {
       const res = await fetch(`/api/staff/${id}`, {
         method: 'PATCH',
@@ -109,14 +111,7 @@ export default function AdminUsersPage() {
 
       {/* Invite Modal */}
       {showInvite && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:left-[220px]">
-          <div className="absolute inset-0 bg-black/30" onClick={() => { setShowInvite(false); setInviteUrl('') }} />
-          <div className="relative bg-[--surface] rounded-xl border border-[--border] p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[15px] font-semibold text-[--text-1]">Invite Staff</h2>
-              <button onClick={() => { setShowInvite(false); setInviteUrl('') }} className="p-1"><X className="w-4 h-4" /></button>
-            </div>
-
+        <AppModal title="Invite Staff" onClose={() => { setShowInvite(false); setInviteUrl('') }} size="md">
             {!inviteUrl ? (
               <form onSubmit={handleInvite} className="space-y-3">
                 <input placeholder="Email *" type="email" value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))}
@@ -148,8 +143,7 @@ export default function AdminUsersPage() {
                 </button>
               </div>
             )}
-          </div>
-        </div>
+        </AppModal>
       )}
     </div>
   )

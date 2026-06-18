@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { invoices, patients } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { verifySessionToken } from '@/lib/auth'
+import { createInvoiceCode } from '@/lib/codes'
 
 export async function GET() {
   try {
@@ -45,9 +46,7 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
-    // Generate invoice code
-    const count = await db.select({ count: invoices.id }).from(invoices)
-    const invoiceCode = `INV-${new Date().getFullYear()}-${String(count.length + 1).padStart(3, '0')}`
+    const invoiceCode = createInvoiceCode()
 
     const [inv] = await db.insert(invoices).values({
       invoiceCode,

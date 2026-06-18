@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Search, Plus, TrendingDown, Pill } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { AppModal } from '@/components/ui/AppModal'
 import { toast } from 'sonner'
 
 export default function PharmacistInventoryPage() {
@@ -104,14 +105,11 @@ export default function PharmacistInventoryPage() {
 
       {/* Add Drug Modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:left-[220px]">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setShowAdd(false)} />
-          <div className="relative bg-[--surface] rounded-xl border border-[--border] p-6 w-full max-w-md">
-            <h2 className="text-[15px] font-semibold text-[--text-1] mb-4">Add Drug</h2>
+        <AppModal title="Add Drug" onClose={() => setShowAdd(false)} size="md">
             <form onSubmit={handleAdd} className="space-y-3">
               <input placeholder="Drug Name *" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 className="w-full px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px] focus:outline-none focus:ring-2 focus:ring-[--accent]" required />
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input type="number" placeholder="Qty" value={form.quantity || ''} onChange={e => setForm(f => ({ ...f, quantity: parseInt(e.target.value) || 0 }))}
                   className="px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px]" />
                 <select value={form.unit} onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
@@ -123,18 +121,14 @@ export default function PharmacistInventoryPage() {
               </div>
               <button type="submit" className="w-full py-2 bg-[--accent] text-white rounded-lg text-[13px] font-medium hover:bg-[--accent-hover]">Add Drug</button>
             </form>
-          </div>
-        </div>
+        </AppModal>
       )}
 
       {/* Edit Stock Modal */}
       {showEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:left-[220px]">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setShowEdit(null)} />
-          <div className="relative bg-[--surface] rounded-xl border border-[--border] p-6 w-full max-w-md">
-            <h2 className="text-[15px] font-semibold text-[--text-1] mb-4">Update Stock — {showEdit.name}</h2>
+        <AppModal title={`Update Stock - ${showEdit.name}`} onClose={() => setShowEdit(null)} size="md">
             <form onSubmit={(e) => handleUpdate(e, showEdit.id)} className="space-y-3">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input type="number" placeholder="Qty" value={editForm.quantity || ''} onChange={e => setEditForm(f => ({ ...f, quantity: parseInt(e.target.value) || 0 }))}
                   className="px-3 py-2 rounded-lg bg-[--surface-2] border border-[--border] text-[13px]" />
                 <select value={editForm.unit} onChange={e => setEditForm(f => ({ ...f, unit: e.target.value }))}
@@ -146,8 +140,7 @@ export default function PharmacistInventoryPage() {
               </div>
               <button type="submit" className="w-full py-2 bg-[--accent] text-white rounded-lg text-[13px] font-medium hover:bg-[--accent-hover]">Update</button>
             </form>
-          </div>
-        </div>
+        </AppModal>
       )}
     </div>
   )
