@@ -139,8 +139,11 @@ export default function RegisterPage() {
 
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-[--bg] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[--bg] flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
+          <Link href="/auth/landing" className="flex items-center gap-1.5 text-sm text-[--text-2] hover:text-[--text-1] mb-6 transition-colors">
+            ← Back to home
+          </Link>
           <div className="bg-[--surface] rounded-2xl border border-[--border] p-8 text-center">
             <div className="w-14 h-14 mx-auto rounded-full bg-[--success-soft] flex items-center justify-center mb-6">
               <CheckCircle className="w-7 h-7 text-[--success]" />
@@ -151,7 +154,7 @@ export default function RegisterPage() {
             <p className="text-xs text-[--text-3] mb-8">Keep this safe for your records.</p>
             <Link
               href="/auth/login"
-              className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-[#0D7A6B] text-white rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-[1px] active:translate-y-0 transition-all"
+              className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-[#0D7A6B] text-white rounded-lg font-semibold text-sm hover:-translate-y-[1px] active:translate-y-0 transition-all"
             >
               Go to Login
             </Link>
@@ -162,8 +165,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[--bg] flex items-center justify-center p-4 py-8">
+    <div className="min-h-screen bg-[--bg] flex flex-col items-center justify-center p-4 py-8">
       <div className="w-full max-w-lg">
+        <Link href="/auth/landing" className="flex items-center gap-1.5 text-sm text-[--text-2] hover:text-[--text-1] mb-6 transition-colors">
+          ← Back to home
+        </Link>
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-[#0D7A6B] flex items-center justify-center">
@@ -323,7 +329,7 @@ export default function RegisterPage() {
             )}
 
             <button type="submit" disabled={isLoading}
-              className="w-full py-2.5 px-4 bg-[#0D7A6B] text-white rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:translate-y-0 flex items-center justify-center gap-2">
+              className="w-full py-2.5 px-4 bg-[#0D7A6B] text-white rounded-lg font-semibold text-sm hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:translate-y-0 flex items-center justify-center gap-2">
               {isLoading && <Loader className="w-4 h-4 animate-spin" />}
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>

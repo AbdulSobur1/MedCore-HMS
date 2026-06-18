@@ -8,7 +8,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#0D7A6B] flex items-center justify-center flex-shrink-0">
               <Stethoscope className="w-6 h-6 text-white" />
@@ -145,7 +145,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border mt-12 sm:mt-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 text-center">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 text-center">
           <p className="text-xs sm:text-sm text-muted-foreground">
             MedCore - Advanced Hospital Management System
           </p>

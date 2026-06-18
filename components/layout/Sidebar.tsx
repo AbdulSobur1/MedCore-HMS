@@ -79,7 +79,7 @@ export function Sidebar({ navItems, open, onClose }: SidebarProps) {
                   <span className="absolute left-0 inset-y-1 w-0.5 bg-[--accent] rounded-r" />
                 )}
                 <Icon className="w-4 h-4 shrink-0" />
-                <span className="sidebar-label">{item.label}</span>
+                <span className="truncate text-[13px]">{item.label}</span>
               </Link>
             )
           })}

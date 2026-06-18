@@ -34,9 +34,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const title = `Admin - ${session.name}`
 
   return (
-    <div className="min-h-screen bg-[--bg]">
+    <div className="min-h-screen bg-[--bg] flex">
       <Sidebar navItems={navItems} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="pl-0 lg:pl-[220px] flex flex-col min-h-screen">
+      <div className="flex flex-col flex-1 min-w-0 min-h-screen lg:ml-[220px]">
         <Topbar title={title} onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 p-6 overflow-y-auto">
           {children}
