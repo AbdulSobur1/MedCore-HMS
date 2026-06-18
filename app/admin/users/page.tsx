@@ -110,7 +110,7 @@ export default function AdminUsersPage() {
       {/* Invite Modal */}
       {showInvite && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/30" onClick={() => { setShowInvite(false); setInviteUrl('') }} />
+          <div className="fixed inset-0 lg:left-[220px] bg-black/30" onClick={() => { setShowInvite(false); setInviteUrl('') }} />
           <div className="relative bg-[--surface] rounded-xl border border-[--border] p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[15px] font-semibold text-[--text-1]">Invite Staff</h2>
